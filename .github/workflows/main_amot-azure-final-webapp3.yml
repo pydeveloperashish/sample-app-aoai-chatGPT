@@ -49,10 +49,20 @@ jobs:
           # Remove .env file to ensure we don't include sensitive data
           rm -f .env
 
+      - name: Create startup script
+        run: |
+          cat > startup.sh << 'EOF'
+          #!/bin/bash
+          echo "Starting application..."
+          export PYTHONPATH=$PYTHONPATH:$(pwd)
+          exec gunicorn --bind=0.0.0.0 --timeout 600 app:bp
+          EOF
+          chmod +x startup.sh
+
       - name: Zip artifact for deployment
         run: |
           # Create more reliable exclusions pattern for zip
-          find . -type d -name "venv" -o -name "node_modules" -o -name ".git" -o -name ".github" -o -name ".pytest_cache" -o -name "__pycache__" -prune -o -type f -name "*.py" -o -name "*.html" -o -name "*.css" -o -name "*.js" -o -name "*.json" -o -name "*.md" -o -name "*.txt" -o -name "*.ini" -o -name "*.yml" -o -name "*.yaml" -o -name "*.cfg" -o -path "./static/*" -o -path "./templates/*" | zip -@ release.zip
+          find . -type d -name "venv" -o -name "node_modules" -o -name ".git" -o -name ".github" -o -name ".pytest_cache" -o -name "__pycache__" -prune -o -type f -name "*.py" -o -name "*.html" -o -name "*.css" -o -name "*.js" -o -name "*.json" -o -name "*.md" -o -name "*.txt" -o -name "*.ini" -o -name "*.yml" -o -name "*.yaml" -o -name "*.cfg" -o -path "./static/*" -o -path "./templates/*" -o -name "startup.sh" | zip -@ release.zip
 
       - name: Upload artifact for deployment jobs
         uses: actions/upload-artifact@v4
@@ -95,7 +105,7 @@ jobs:
         with:
           app-name: 'amot-azure-final-webapp3'
           slot-name: 'Production'
-          startup-command: 'gunicorn --bind=0.0.0.0 --timeout 600 app:bp'
+          startup-command: './startup.sh'
           app-settings: |
             # Deployment settings
             WEBSITE_RUN_FROM_PACKAGE=1
@@ -112,9 +122,6 @@ jobs:
             AZURE_OPENAI_MAX_TOKENS=1000
             AZURE_OPENAI_STREAM=true
             
-            # Authentication settings
-            AUTH_ENABLED=false
-            
             # UI settings
             UI_TITLE="Azure OpenAI Chat"
             UI_CHAT_TITLE="Azure OpenAI Chat"
@@ -122,6 +129,17 @@ jobs:
             UI_SHOW_SHARE_BUTTON=true
             UI_SHOW_CHAT_HISTORY_BUTTON=true
             
-            # Skip looking for .env file
+            # Auth settings
+            AUTH_ENABLED=false
+            
+            # Search settings
+            SEARCH_ALLOW_PARTIAL_RESULT=false
+            SEARCH_INCLUDE_CONTEXTS=citations,intent
+            
+            # Base settings
+            DEBUG=true
+            MS_DEFENDER_ENABLED=false
+            
+            # Avoid loading .env file
             DOTENV_PATH="non_existent_file.env"
           
