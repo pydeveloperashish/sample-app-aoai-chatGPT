@@ -34,8 +34,23 @@ jobs:
         
       # Optional: Add step to run tests here (PyTest, Django test suites, etc.)
 
+      - name: Clean up symlinks and temporary files
+        run: |
+          # Find and remove symlinks
+          find . -type l -delete
+          # Remove node_modules if exists (common source of symlinks)
+          rm -rf node_modules
+          # Remove any .git directories which can contain symlinks
+          find . -name ".git" -type d -exec rm -rf {} +
+          # Remove __pycache__ directories
+          find . -name "__pycache__" -type d -exec rm -rf {} +
+          # Remove .pyc files
+          find . -name "*.pyc" -delete
+
       - name: Zip artifact for deployment
-        run: zip release.zip ./* -r
+        run: |
+          # Create more reliable exclusions pattern for zip
+          find . -type d -name "venv" -o -name "node_modules" -o -name ".git" -o -name ".github" -o -name ".pytest_cache" -o -name "__pycache__" -prune -o -type f -name "*.py" -o -name "*.html" -o -name "*.css" -o -name "*.js" -o -name "*.json" -o -name "*.md" -o -name "*.txt" -o -name "*.ini" -o -name "*.yml" -o -name "*.yaml" -o -name "*.cfg" -o -path "./static/*" -o -path "./templates/*" | zip -@ release.zip
 
       - name: Upload artifact for deployment jobs
         uses: actions/upload-artifact@v4
@@ -78,4 +93,8 @@ jobs:
         with:
           app-name: 'amot-azure-final-webapp3'
           slot-name: 'Production'
+          startup-command: 'gunicorn --bind=0.0.0.0 --timeout 600 app:bp'
+          app-settings: |
+            WEBSITE_RUN_FROM_PACKAGE=1
+            SCM_DO_BUILD_DURING_DEPLOYMENT=true
           
