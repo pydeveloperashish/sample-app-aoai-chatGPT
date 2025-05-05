@@ -46,6 +46,8 @@ jobs:
           find . -name "__pycache__" -type d -exec rm -rf {} +
           # Remove .pyc files
           find . -name "*.pyc" -delete
+          # Remove .env file to ensure we don't include sensitive data
+          rm -f .env
 
       - name: Zip artifact for deployment
         run: |
@@ -95,6 +97,31 @@ jobs:
           slot-name: 'Production'
           startup-command: 'gunicorn --bind=0.0.0.0 --timeout 600 app:bp'
           app-settings: |
+            # Deployment settings
             WEBSITE_RUN_FROM_PACKAGE=1
             SCM_DO_BUILD_DURING_DEPLOYMENT=true
+            
+            # Azure OpenAI settings
+            AZURE_OPENAI_MODEL=${{ secrets.AZURE_OPENAI_MODEL }}
+            AZURE_OPENAI_ENDPOINT=${{ secrets.AZURE_OPENAI_ENDPOINT }}
+            AZURE_OPENAI_KEY=${{ secrets.AZURE_OPENAI_KEY }}
+            AZURE_OPENAI_SYSTEM_MESSAGE="You are an AI assistant that helps people find information."
+            AZURE_OPENAI_PREVIEW_API_VERSION=2024-05-01-preview
+            AZURE_OPENAI_TEMPERATURE=0
+            AZURE_OPENAI_TOP_P=0
+            AZURE_OPENAI_MAX_TOKENS=1000
+            AZURE_OPENAI_STREAM=true
+            
+            # Authentication settings
+            AUTH_ENABLED=false
+            
+            # UI settings
+            UI_TITLE="Azure OpenAI Chat"
+            UI_CHAT_TITLE="Azure OpenAI Chat"
+            UI_CHAT_DESCRIPTION="Ask me anything about your data"
+            UI_SHOW_SHARE_BUTTON=true
+            UI_SHOW_CHAT_HISTORY_BUTTON=true
+            
+            # Skip looking for .env file
+            DOTENV_PATH="non_existent_file.env"
           
