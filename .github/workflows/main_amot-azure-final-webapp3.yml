@@ -55,7 +55,17 @@ jobs:
           #!/bin/bash
           echo "Starting application..."
           export PYTHONPATH=$PYTHONPATH:$(pwd)
-          exec gunicorn --bind=0.0.0.0 --timeout 600 app:bp
+          
+          # Print environment variables (without secrets)
+          echo "=== Environment Variables ==="
+          env | grep -v KEY | grep -v SECRET | grep -v PASSWORD | sort
+          
+          # Create a minimal .env file with just DOTENV_PATH
+          echo "DOTENV_PATH=non_existent_file.env" > .env
+          
+          # Start the application
+          echo "Starting Gunicorn with app:bp..."
+          exec gunicorn --bind=0.0.0.0 --timeout 600 --log-level debug app:bp
           EOF
           chmod +x startup.sh
 
@@ -110,6 +120,11 @@ jobs:
             # Deployment settings
             WEBSITE_RUN_FROM_PACKAGE=1
             SCM_DO_BUILD_DURING_DEPLOYMENT=true
+            
+            # Identity settings
+            IDENTITY_ENDPOINT=${{ secrets.IDENTITY_ENDPOINT }}
+            IDENTITY_HEADER=${{ secrets.IDENTITY_HEADER }}
+            AZURE_CLIENT_ID=${{ secrets.AZURE_CLIENT_ID }}
             
             # Azure OpenAI settings
             AZURE_OPENAI_MODEL=${{ secrets.AZURE_OPENAI_MODEL }}
