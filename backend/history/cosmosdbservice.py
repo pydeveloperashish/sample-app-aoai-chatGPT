@@ -30,6 +30,20 @@ class CosmosConversationClient():
             raise ValueError("Invalid CosmosDB container name") 
         
 
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        await self.close()
+
+    async def close(self):
+        if hasattr(self, 'cosmosdb_client') and self.cosmosdb_client:
+            try:
+                await self.cosmosdb_client.close()
+                print("CosmosDB client closed successfully")
+            except Exception as e:
+                print(f"Error closing CosmosDB client: {str(e)}")
+
     async def ensure(self):
         if not self.cosmosdb_client or not self.database_client or not self.container_client:
             return False, "CosmosDB client not initialized correctly"

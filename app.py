@@ -83,6 +83,48 @@ def create_app():
             app.cosmos_conversation_client = None
             raise e
     
+    @app.after_serving
+    async def cleanup():
+        logger.info("Application shutdown - cleaning up resources...")
+        
+        # Close CosmosDB client if it exists
+        if hasattr(app, 'cosmos_conversation_client') and app.cosmos_conversation_client:
+            try:
+                logger.info("Closing CosmosDB client connection...")
+                if hasattr(app.cosmos_conversation_client, 'cosmosdb_client'):
+                    await app.cosmos_conversation_client.cosmosdb_client.close()
+                    logger.info("CosmosDB client closed successfully")
+            except Exception as e:
+                logger.error(f"Error closing CosmosDB client: {str(e)}")
+        
+        # Close any remaining aiohttp sessions
+        try:
+            import aiohttp
+            import asyncio
+            import gc
+            
+            # Force collection to find any lingering sessions
+            gc.collect()
+            
+            # Find all client sessions
+            for obj in gc.get_objects():
+                if isinstance(obj, aiohttp.ClientSession) and not obj.closed:
+                    logger.info(f"Closing unclosed aiohttp ClientSession: {obj}")
+                    try:
+                        await obj.close()
+                    except Exception as e:
+                        logger.error(f"Error closing aiohttp session: {str(e)}")
+                        
+            # Let the event loop process all pending tasks
+            pending = asyncio.all_tasks()
+            logger.info(f"Waiting for {len(pending)} pending tasks to complete...")
+            if pending:
+                await asyncio.gather(*pending, return_exceptions=True)
+                
+            logger.info("All resources cleaned up")
+        except Exception as e:
+            logger.error(f"Error during cleanup: {str(e)}")
+    
     return app
 
 
@@ -307,15 +349,20 @@ async def init_cosmosdb_client():
                         logger.warning("Database not found - may need to be created")
                     elif "container" in error.lower() and "not found" in error.lower():
                         logger.warning("Container not found - may need to be created")
+                    await cosmos_conversation_client.close()
                     cosmos_conversation_client = None
             except Exception as e:
                 logger.error(f"Error testing CosmosDB connection: {str(e)}")
                 logger.exception("CosmosDB connection test exception")
+                if cosmos_conversation_client:
+                    await cosmos_conversation_client.close()
                 cosmos_conversation_client = None
                 
         except Exception as e:
             logger.error(f"Exception in CosmosDB initialization: {str(e)}")
             logger.exception("Full stack trace for CosmosDB initialization exception")
+            if cosmos_conversation_client:
+                await cosmos_conversation_client.close()
             cosmos_conversation_client = None
             raise e
     else:
