@@ -868,6 +868,31 @@ async def list_conversations():
     return jsonify(conversations), 200
 
 
+def sanitize_json_content(content):
+    """
+    Sanitize content to ensure it can be safely serialized to JSON.
+    This handles non-UTF8 characters, control characters, and other issues.
+    """
+    if content is None:
+        return ""
+        
+    # Handle non-string content
+    if not isinstance(content, str):
+        try:
+            return str(content)
+        except:
+            return "[Content cannot be displayed]"
+    
+    # Replace problematic characters that might cause JSON issues
+    # Replace control characters and non-UTF8 sequences
+    sanitized = ""
+    for char in content:
+        if ord(char) < 32 and char not in '\r\n\t':
+            continue  # Skip control characters except newlines and tabs
+        sanitized += char
+        
+    return sanitized
+
 @bp.route("/history/read", methods=["POST"])
 async def get_conversation():
     await cosmos_db_ready.wait()
@@ -877,47 +902,123 @@ async def get_conversation():
     ## check request for conversation_id
     request_json = await request.get_json()
     conversation_id = request_json.get("conversation_id", None)
+    
+    logger.info(f"Reading history for conversation_id={conversation_id}, user_id={user_id}")
 
     if not conversation_id:
         return jsonify({"error": "conversation_id is required"}), 400
 
     ## make sure cosmos is configured
     if not current_app.cosmos_conversation_client:
-        raise Exception("CosmosDB is not configured or not working")
+        logger.error("CosmosDB client is not initialized")
+        return jsonify({"error": "CosmosDB is not configured or not working"}), 500
 
-    ## get the conversation object and the related messages from cosmos
-    conversation = await current_app.cosmos_conversation_client.get_conversation(
-        user_id, conversation_id
-    )
-    ## return the conversation id and the messages in the bot frontend format
-    if not conversation:
-        return (
-            jsonify(
-                {
-                    "error": f"Conversation {conversation_id} was not found. It either does not exist or the logged in user does not have access to it."
-                }
-            ),
-            404,
+    try:
+        ## get the conversation object and the related messages from cosmos
+        logger.info(f"Getting conversation with ID: {conversation_id}")
+        conversation = await current_app.cosmos_conversation_client.get_conversation(
+            user_id, conversation_id
         )
+        ## return the conversation id and the messages in the bot frontend format
+        if not conversation:
+            logger.error(f"Conversation {conversation_id} not found for user {user_id}")
+            return (
+                jsonify(
+                    {
+                        "error": f"Conversation {conversation_id} was not found. It either does not exist or the logged in user does not have access to it."
+                    }
+                ),
+                404,
+            )
 
-    # get the messages for the conversation from cosmos
-    conversation_messages = await current_app.cosmos_conversation_client.get_messages(
-        user_id, conversation_id
-    )
+        # get the messages for the conversation from cosmos
+        logger.info(f"Getting messages for conversation ID: {conversation_id}")
+        conversation_messages = await current_app.cosmos_conversation_client.get_messages(
+            user_id, conversation_id
+        )
+        
+        if not conversation_messages:
+            logger.info(f"No messages found for conversation ID: {conversation_id}")
+            return jsonify({"conversation_id": conversation_id, "messages": []}), 200
 
-    ## format the messages in the bot frontend format
-    messages = [
-        {
-            "id": msg["id"],
-            "role": msg["role"],
-            "content": msg["content"],
-            "createdAt": msg["createdAt"],
-            "feedback": msg.get("feedback"),
-        }
-        for msg in conversation_messages
-    ]
+        logger.info(f"Found {len(conversation_messages)} messages")
+        
+        # Log sample message to help diagnose issues
+        if len(conversation_messages) > 0:
+            sample_msg = conversation_messages[0]
+            sanitized_sample = {k: v for k, v in sample_msg.items() if k != 'content'}
+            logger.info(f"Sample message structure: {sanitized_sample}")
+            logger.info(f"Message keys: {list(sample_msg.keys())}")
 
-    return jsonify({"conversation_id": conversation_id, "messages": messages}), 200
+        ## format the messages in the bot frontend format
+        messages = []
+        for msg in conversation_messages:
+            try:
+                # Sanitize content to ensure JSON safety
+                sanitized_content = sanitize_json_content(msg.get("content"))
+                
+                formatted_msg = {
+                    "id": msg["id"],
+                    "role": msg["role"],
+                    "content": sanitized_content,
+                    "createdAt": msg["createdAt"],
+                    "feedback": sanitize_json_content(msg.get("feedback", ""))
+                }
+                messages.append(formatted_msg)
+            except KeyError as ke:
+                logger.error(f"Missing key in message: {ke}")
+                logger.info(f"Message structure: {msg}")
+                # Add a placeholder message if we couldn't format this message
+                messages.append({
+                    "id": msg.get("id", f"error-{len(messages)}"),
+                    "role": msg.get("role", "system"),
+                    "content": "Error loading this message",
+                    "createdAt": msg.get("createdAt", datetime.utcnow().isoformat()),
+                    "feedback": ""
+                })
+        
+        # Test serializing the response to make sure it's valid JSON
+        try:
+            response_data = {"conversation_id": conversation_id, "messages": messages}
+            
+            # Test if the response can be properly JSON serialized
+            response_str = json.dumps(response_data)
+            
+            # Test parsing it back to ensure it's valid
+            json.loads(response_str)
+            
+            logger.info(f"Successfully validated response JSON for {len(messages)} messages")
+            return jsonify(response_data), 200
+        except Exception as json_e:
+            logger.error(f"Error serializing response to JSON: {str(json_e)}")
+            
+            # Try to identify problematic messages
+            for i, msg in enumerate(messages):
+                try:
+                    json.dumps(msg)
+                except Exception as e:
+                    logger.error(f"Message at index {i} is not JSON serializable: {str(e)}")
+                    # Try to find which field is problematic
+                    for k, v in msg.items():
+                        try:
+                            json.dumps({k: v})
+                        except:
+                            logger.error(f"Field '{k}' has invalid value: {repr(v)}")
+            
+            # Return filtered messages with problematic ones removed
+            safe_messages = []
+            for msg in messages:
+                try:
+                    json.dumps(msg)
+                    safe_messages.append(msg)
+                except:
+                    pass
+                    
+            logger.info(f"Returning {len(safe_messages)} sanitized messages (removed {len(messages) - len(safe_messages)} problematic messages)")
+            return jsonify({"conversation_id": conversation_id, "messages": safe_messages}), 200
+    except Exception as e:
+        logger.exception(f"Exception in /history/read: {str(e)}")
+        return jsonify({"error": str(e)}), 500
 
 
 @bp.route("/history/rename", methods=["POST"])
@@ -1064,7 +1165,20 @@ async def ensure_cosmos():
         if not success:
             logger.error(f"CosmosDB connection test failed: {err}")
             if err:
-                return jsonify({"error": err}), 422
+                # Try to sanitize the error message to avoid JSON parsing issues
+                sanitized_err = err.replace('\n', ' ').replace('\r', ' ')
+                logger.info(f"Original error: {repr(err)}")
+                logger.info(f"Sanitized error: {repr(sanitized_err)}")
+                
+                # Validate the error can be properly serialized to JSON
+                try:
+                    test_json = json.dumps({"error": sanitized_err})
+                    json.loads(test_json)  # Verify it can be parsed back
+                    return jsonify({"error": sanitized_err}), 422
+                except Exception as json_e:
+                    logger.error(f"Error response contains invalid JSON characters: {str(json_e)}")
+                    return jsonify({"error": "Database connection error - see logs for details"}), 422
+            
             return jsonify({"error": "CosmosDB is not configured or not working"}), 500
 
         logger.info("CosmosDB connection test successful")
@@ -1072,28 +1186,36 @@ async def ensure_cosmos():
     except Exception as e:
         logger.exception("Exception in /history/ensure")
         cosmos_exception = str(e)
-        if "Invalid credentials" in cosmos_exception:
-            return jsonify({"error": cosmos_exception}), 401
-        elif "Invalid CosmosDB database name" in cosmos_exception:
-            return (
-                jsonify(
+        
+        # Try to sanitize the exception message before serializing
+        try:
+            sanitized_error = cosmos_exception.replace('\n', ' ').replace('\r', ' ')
+            logger.info(f"Original exception: {repr(cosmos_exception)}")
+            logger.info(f"Sanitized exception: {repr(sanitized_error)}")
+            
+            # Test if the sanitized message can be properly serialized
+            test_json = json.dumps({"error": sanitized_error})
+            json.loads(test_json)  # Verify it can be parsed back
+            
+            if "Invalid credentials" in sanitized_error:
+                return jsonify({"error": sanitized_error}), 401
+            elif "Invalid CosmosDB database name" in sanitized_error:
+                return jsonify(
                     {
-                        "error": f"{cosmos_exception} {app_settings.chat_history.database} for account {app_settings.chat_history.account}"
+                        "error": f"{sanitized_error} {app_settings.chat_history.database} for account {app_settings.chat_history.account}"
                     }
-                ),
-                422,
-            )
-        elif "Invalid CosmosDB container name" in cosmos_exception:
-            return (
-                jsonify(
+                ), 422
+            elif "Invalid CosmosDB container name" in sanitized_error:
+                return jsonify(
                     {
-                        "error": f"{cosmos_exception}: {app_settings.chat_history.conversations_container}"
+                        "error": f"{sanitized_error}: {app_settings.chat_history.conversations_container}"
                     }
-                ),
-                422,
-            )
-        else:
-            return jsonify({"error": "CosmosDB is not working"}), 500
+                ), 422
+            else:
+                return jsonify({"error": sanitized_error}), 500
+        except Exception as json_e:
+            logger.error(f"Error serializing exception to JSON: {str(json_e)}")
+            return jsonify({"error": "Database error - see logs for details"}), 500
 
 
 async def generate_title(conversation_messages) -> str:
