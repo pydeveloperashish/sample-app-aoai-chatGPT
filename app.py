@@ -40,19 +40,46 @@ bp = Blueprint("routes", __name__, static_folder="static", template_folder="stat
 
 cosmos_db_ready = asyncio.Event()
 
+# Setup enhanced logging for CosmosDB debugging
+DEBUG = os.environ.get("DEBUG", "false").lower() == "true"
+logging.basicConfig(
+    level=logging.DEBUG if DEBUG else logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger("app")
+
 
 def create_app():
     app = Quart(__name__)
     app.register_blueprint(bp)
     app.config["TEMPLATES_AUTO_RELOAD"] = True
     
+    logger.info("=== Application Initialization ===")
+    logger.info(f"Debug mode: {DEBUG}")
+    logger.info(f"Chat history enabled: {app_settings.chat_history is not None}")
+    
+    if app_settings.chat_history:
+        logger.info(f"CosmosDB account: {app_settings.chat_history.account}")
+        logger.info(f"CosmosDB database: {app_settings.chat_history.database}")
+        logger.info(f"CosmosDB container: {app_settings.chat_history.conversations_container}")
+        logger.info(f"Feedback enabled: {app_settings.chat_history.enable_feedback}")
+    else:
+        logger.warning("Chat history is not configured! No CosmosDB settings found.")
+    
     @app.before_serving
     async def init():
         try:
+            logger.info("Initializing CosmosDB client...")
             app.cosmos_conversation_client = await init_cosmosdb_client()
-            cosmos_db_ready.set()
+            if app.cosmos_conversation_client:
+                logger.info("CosmosDB client initialized successfully")
+                cosmos_db_ready.set()
+                logger.info("cosmos_db_ready event set")
+            else:
+                logger.warning("CosmosDB client initialization returned None")
         except Exception as e:
-            logging.exception("Failed to initialize CosmosDB client")
+            logger.error(f"Failed to initialize CosmosDB client: {str(e)}")
+            logger.exception("Full stack trace for CosmosDB initialization failure")
             app.cosmos_conversation_client = None
             raise e
     
@@ -79,10 +106,6 @@ async def assets(path):
 
 
 # Debug settings
-DEBUG = os.environ.get("DEBUG", "false")
-if DEBUG.lower() == "true":
-    logging.basicConfig(level=logging.DEBUG)
-
 USER_AGENT = "GitHubSampleWebApp/AsyncAzureOpenAI/1.0.0"
 
 
@@ -208,19 +231,32 @@ async def openai_remote_azure_function_call(function_name, function_args):
 
 async def init_cosmosdb_client():
     cosmos_conversation_client = None
+    logger.info("=== CosmosDB Client Initialization ===")
+    
     if app_settings.chat_history:
+        logger.info(f"CosmosDB settings found: account={app_settings.chat_history.account}, database={app_settings.chat_history.database}, container={app_settings.chat_history.conversations_container}")
+        
         try:
             cosmos_endpoint = (
                 f"https://{app_settings.chat_history.account}.documents.azure.com:443/"
             )
+            logger.info(f"CosmosDB endpoint URL: {cosmos_endpoint}")
 
+            # Check authentication method
             if not app_settings.chat_history.account_key:
+                logger.info("No account key found, using managed identity authentication")
                 async with DefaultAzureCredential() as cred:
                     credential = cred
-                    
+                    logger.info("DefaultAzureCredential created for managed identity authentication")
             else:
+                logger.info("Using account key authentication")
                 credential = app_settings.chat_history.account_key
 
+            logger.info("Creating CosmosConversationClient...")
+            logger.info(f"Database name: {app_settings.chat_history.database}")
+            logger.info(f"Container name: {app_settings.chat_history.conversations_container}")
+            logger.info(f"Enable feedback: {app_settings.chat_history.enable_feedback}")
+            
             cosmos_conversation_client = CosmosConversationClient(
                 cosmosdb_endpoint=cosmos_endpoint,
                 credential=credential,
@@ -228,12 +264,28 @@ async def init_cosmosdb_client():
                 container_name=app_settings.chat_history.conversations_container,
                 enable_message_feedback=app_settings.chat_history.enable_feedback,
             )
+            
+            # Test the connection to verify it's working
+            logger.info("Testing CosmosDB connection...")
+            try:
+                success, error = await cosmos_conversation_client.ensure()
+                if success:
+                    logger.info("CosmosDB connection test successful!")
+                else:
+                    logger.error(f"CosmosDB connection test failed: {error}")
+                    cosmos_conversation_client = None
+            except Exception as e:
+                logger.error(f"Error testing CosmosDB connection: {str(e)}")
+                logger.exception("CosmosDB connection test exception")
+                cosmos_conversation_client = None
+                
         except Exception as e:
-            logging.exception("Exception in CosmosDB initialization", e)
+            logger.error(f"Exception in CosmosDB initialization: {str(e)}")
+            logger.exception("Full stack trace for CosmosDB initialization exception")
             cosmos_conversation_client = None
             raise e
     else:
-        logging.debug("CosmosDB not configured")
+        logger.warning("CosmosDB not configured - no chat_history settings found")
 
     return cosmos_conversation_client
 
@@ -997,18 +1049,28 @@ async def clear_messages():
 async def ensure_cosmos():
     await cosmos_db_ready.wait()
     if not app_settings.chat_history:
+        logger.error("CosmosDB is not configured - missing chat_history settings")
         return jsonify({"error": "CosmosDB is not configured"}), 404
 
     try:
+        logger.info("Testing CosmosDB connection via /history/ensure endpoint")
+        
+        if not current_app.cosmos_conversation_client:
+            logger.error("CosmosDB client is not initialized")
+            return jsonify({"error": "CosmosDB client is not initialized"}), 500
+            
         success, err = await current_app.cosmos_conversation_client.ensure()
-        if not current_app.cosmos_conversation_client or not success:
+        
+        if not success:
+            logger.error(f"CosmosDB connection test failed: {err}")
             if err:
                 return jsonify({"error": err}), 422
             return jsonify({"error": "CosmosDB is not configured or not working"}), 500
 
+        logger.info("CosmosDB connection test successful")
         return jsonify({"message": "CosmosDB is configured and working"}), 200
     except Exception as e:
-        logging.exception("Exception in /history/ensure")
+        logger.exception("Exception in /history/ensure")
         cosmos_exception = str(e)
         if "Invalid credentials" in cosmos_exception:
             return jsonify({"error": cosmos_exception}), 401
@@ -1055,6 +1117,221 @@ async def generate_title(conversation_messages) -> str:
     except Exception as e:
         logging.exception("Exception while generating title", e)
         return messages[-2]["content"]
+
+
+@bp.route("/debug/cosmos", methods=["GET"])
+async def debug_cosmos():
+    """
+    Debug endpoint to check CosmosDB connection and database structure.
+    """
+    if not app_settings.chat_history:
+        logger.error("CosmosDB not configured - no chat_history settings found")
+        return jsonify({
+            "error": "CosmosDB not configured", 
+            "settings": "missing"
+        }), 404
+        
+    try:
+        # Log environment settings
+        logger.info("=== CosmosDB Environment Variables ===")
+        cosmos_account = os.environ.get("AZURE_COSMOSDB_ACCOUNT", "Not set")
+        cosmos_db = os.environ.get("AZURE_COSMOSDB_DATABASE", "Not set")
+        cosmos_container = os.environ.get("AZURE_COSMOSDB_CONVERSATIONS_CONTAINER", "Not set")
+        cosmos_key = os.environ.get("AZURE_COSMOSDB_ACCOUNT_KEY", "Not set")
+        enable_feedback = os.environ.get("AZURE_COSMOSDB_ENABLE_FEEDBACK", "Not set")
+        
+        debug_info = {
+            "environment": {
+                "AZURE_COSMOSDB_ACCOUNT": cosmos_account,
+                "AZURE_COSMOSDB_DATABASE": cosmos_db,
+                "AZURE_COSMOSDB_CONVERSATIONS_CONTAINER": cosmos_container,
+                "AZURE_COSMOSDB_ACCOUNT_KEY": "Present" if cosmos_key != "Not set" else "Not set",
+                "AZURE_COSMOSDB_ENABLE_FEEDBACK": enable_feedback
+            },
+            "settings": {
+                "account": app_settings.chat_history.account,
+                "database": app_settings.chat_history.database,
+                "container": app_settings.chat_history.conversations_container,
+                "enable_feedback": app_settings.chat_history.enable_feedback,
+                "account_key_present": app_settings.chat_history.account_key is not None
+            }
+        }
+        
+        logger.info(f"Environment variables: {debug_info['environment']}")
+        logger.info(f"Settings: {debug_info['settings']}")
+        
+        if not current_app.cosmos_conversation_client:
+            logger.error("CosmosDB client is not initialized")
+            debug_info["client_status"] = "Not initialized"
+            return jsonify(debug_info), 500
+        
+        # Check the connection and database/container setup
+        success, message = await current_app.cosmos_conversation_client.ensure()
+        debug_info["connection_test"] = {
+            "success": success,
+            "message": message
+        }
+        
+        if not success:
+            logger.error(f"CosmosDB connection failed: {message}")
+            return jsonify(debug_info), 422
+        
+        # If connection is successful, check the database structure
+        logger.info("Checking database and container structure...")
+        debug_info["database_check"] = "Success"
+        
+        # Get database properties
+        try:
+            database_info = await current_app.cosmos_conversation_client.database_client.read()
+            debug_info["database_info"] = {
+                "id": database_info["id"],
+                "rid": database_info.get("_rid", "N/A"),
+                "self": database_info.get("_self", "N/A")
+            }
+            logger.info(f"Successfully connected to database: {database_info['id']}")
+        except Exception as e:
+            logger.error(f"Error accessing database: {str(e)}")
+            debug_info["database_error"] = str(e)
+            return jsonify(debug_info), 500
+        
+        # Get container properties
+        try:
+            container_info = await current_app.cosmos_conversation_client.container_client.read()
+            debug_info["container_info"] = {
+                "id": container_info["id"],
+                "rid": container_info.get("_rid", "N/A"),
+                "partition_key": container_info.get("partitionKey", {}).get("paths", ["N/A"])[0]
+            }
+            logger.info(f"Successfully connected to container: {container_info['id']}")
+        except Exception as e:
+            logger.error(f"Error accessing container: {str(e)}")
+            debug_info["container_error"] = str(e)
+            return jsonify(debug_info), 500
+            
+        return jsonify(debug_info), 200
+    except Exception as e:
+        logger.exception(f"Exception in /debug/cosmos: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+
+@bp.route("/debug/cosmos/create", methods=["GET"])
+async def debug_cosmos_create():
+    """
+    Debug endpoint to attempt to create the CosmosDB database and container if they don't exist.
+    """
+    if not app_settings.chat_history:
+        logger.error("CosmosDB not configured - no chat_history settings found")
+        return jsonify({
+            "error": "CosmosDB not configured", 
+            "settings": "missing"
+        }), 404
+        
+    try:
+        cosmos_endpoint = f"https://{app_settings.chat_history.account}.documents.azure.com:443/"
+        logger.info(f"Attempting to connect to CosmosDB at {cosmos_endpoint}")
+        
+        if not app_settings.chat_history.account_key:
+            logger.info("Using managed identity for authentication")
+            async with DefaultAzureCredential() as cred:
+                credential = cred
+        else:
+            logger.info("Using account key for authentication")
+            credential = app_settings.chat_history.account_key
+        
+        # Create a new client directly to test database/container creation
+        from azure.cosmos.aio import CosmosClient
+        from azure.cosmos import exceptions, PartitionKey
+        
+        async with CosmosClient(cosmos_endpoint, credential=credential) as client:
+            # Check if the database exists
+            database_name = app_settings.chat_history.database
+            container_name = app_settings.chat_history.conversations_container
+            
+            logger.info(f"Checking if database {database_name} exists")
+            try:
+                # Try to read the database to see if it exists
+                database_client = client.get_database_client(database_name)
+                await database_client.read()
+                database_exists = True
+                logger.info(f"Database {database_name} exists")
+            except exceptions.CosmosResourceNotFoundError:
+                # Database doesn't exist, create it
+                database_exists = False
+                logger.warning(f"Database {database_name} does not exist")
+                
+            # Create database if it doesn't exist
+            if not database_exists:
+                logger.info(f"Attempting to create database {database_name}")
+                try:
+                    database_client = await client.create_database(database_name)
+                    logger.info(f"Successfully created database {database_name}")
+                except Exception as e:
+                    logger.error(f"Failed to create database: {str(e)}")
+                    return jsonify({
+                        "error": f"Failed to create database: {str(e)}",
+                        "database": database_name
+                    }), 500
+            
+            # Now check if the container exists
+            try:
+                container_client = database_client.get_container_client(container_name)
+                await container_client.read()
+                container_exists = True
+                logger.info(f"Container {container_name} exists")
+            except exceptions.CosmosResourceNotFoundError:
+                container_exists = False
+                logger.warning(f"Container {container_name} does not exist")
+            
+            # Create container if it doesn't exist
+            if not container_exists:
+                logger.info(f"Attempting to create container {container_name}")
+                try:
+                    container_client = await database_client.create_container(
+                        id=container_name,
+                        partition_key=PartitionKey(path="/userId")
+                    )
+                    logger.info(f"Successfully created container {container_name}")
+                except Exception as e:
+                    logger.error(f"Failed to create container: {str(e)}")
+                    return jsonify({
+                        "error": f"Failed to create container: {str(e)}",
+                        "container": container_name
+                    }), 500
+            
+            # Test writing a sample document
+            logger.info("Testing document creation")
+            try:
+                test_item = {
+                    'id': f'test-{uuid.uuid4()}',
+                    'type': 'test',
+                    'userId': 'test-user',
+                    'createdAt': datetime.utcnow().isoformat(),
+                    'content': 'This is a test document'
+                }
+                
+                created_item = await container_client.create_item(test_item)
+                item_id = created_item['id']
+                logger.info(f"Successfully created test document with id {item_id}")
+                
+                # Delete the test item
+                await container_client.delete_item(item=item_id, partition_key='test-user')
+                logger.info(f"Successfully deleted test document with id {item_id}")
+            except Exception as e:
+                logger.error(f"Failed to create/delete test document: {str(e)}")
+                return jsonify({
+                    "error": f"Failed to create/delete test document: {str(e)}"
+                }), 500
+                
+            return jsonify({
+                "message": "CosmosDB setup verified and test document created/deleted successfully",
+                "database_existed": database_exists,
+                "container_existed": container_exists,
+                "status": "success"
+            }), 200
+                
+    except Exception as e:
+        logger.exception(f"Exception in /debug/cosmos/create: {str(e)}")
+        return jsonify({"error": str(e)}), 500
 
 
 app = create_app()
