@@ -69,12 +69,20 @@ class CosmosConversationClient():
             return False
 
     async def delete_conversation(self, user_id, conversation_id):
-        conversation = await self.container_client.read_item(item=conversation_id, partition_key=user_id)        
-        if conversation:
-            resp = await self.container_client.delete_item(item=conversation_id, partition_key=user_id)
-            return resp
-        else:
+        try:
+            # Use conversation_id as the partition key
+            conversation = await self.container_client.read_item(item=conversation_id, partition_key=conversation_id)        
+            if conversation:
+                resp = await self.container_client.delete_item(item=conversation_id, partition_key=conversation_id)
+                return resp
+            else:
+                return True
+        except exceptions.CosmosResourceNotFoundError:
+            # If conversation not found, consider it already deleted
             return True
+        except Exception as e:
+            print(f"Error deleting conversation: {str(e)}")
+            return False
 
         
     async def delete_messages(self, conversation_id, user_id):
@@ -83,8 +91,12 @@ class CosmosConversationClient():
         response_list = []
         if messages:
             for message in messages:
-                resp = await self.container_client.delete_item(item=message['id'], partition_key=user_id)
-                response_list.append(resp)
+                try:
+                    # Use message ID as the partition key
+                    resp = await self.container_client.delete_item(item=message['id'], partition_key=message['id'])
+                    response_list.append(resp)
+                except Exception as e:
+                    print(f"Error deleting message {message['id']}: {str(e)}")
             return response_list
 
 
@@ -155,12 +167,21 @@ class CosmosConversationClient():
             return False
     
     async def update_message_feedback(self, user_id, message_id, feedback):
-        message = await self.container_client.read_item(item=message_id, partition_key=user_id)
-        if message:
-            message['feedback'] = feedback
-            resp = await self.container_client.upsert_item(message)
-            return resp
-        else:
+        try:
+            # Use message_id as the partition key instead of user_id
+            message = await self.container_client.read_item(item=message_id, partition_key=message_id)
+            if message:
+                message['feedback'] = feedback
+                resp = await self.container_client.upsert_item(message)
+                return resp
+            else:
+                return False
+        except exceptions.CosmosResourceNotFoundError as e:
+            # Log details for debugging
+            print(f"Message not found: {message_id}, error: {str(e)}")
+            return False
+        except Exception as e:
+            print(f"Error updating message feedback: {str(e)}")
             return False
 
     async def get_messages(self, user_id, conversation_id):

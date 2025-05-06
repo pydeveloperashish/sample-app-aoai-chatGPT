@@ -840,29 +840,80 @@ async def update_message():
         if not message_feedback:
             return jsonify({"error": "message_feedback is required"}), 400
 
+        logger.info(f"Processing feedback for message_id={message_id}, user_id={user_id}, feedback={message_feedback}")
+
         ## update the message in cosmos
-        updated_message = await current_app.cosmos_conversation_client.update_message_feedback(
-            user_id, message_id, message_feedback
-        )
-        if updated_message:
-            return (
-                jsonify(
-                    {
-                        "message": f"Successfully updated message with feedback {message_feedback}",
-                        "message_id": message_id,
-                    }
-                ),
-                200,
+        try:
+            updated_message = await current_app.cosmos_conversation_client.update_message_feedback(
+                user_id, message_id, message_feedback
             )
-        else:
-            return (
-                jsonify(
-                    {
-                        "error": f"Unable to update message {message_id}. It either does not exist or the user does not have access to it."
-                    }
-                ),
-                404,
-            )
+            if updated_message:
+                logger.info(f"Successfully updated message {message_id} with feedback {message_feedback}")
+                return (
+                    jsonify(
+                        {
+                            "message": f"Successfully updated message with feedback {message_feedback}",
+                            "message_id": message_id,
+                        }
+                    ),
+                    200,
+                )
+            else:
+                logger.error(f"Unable to update message {message_id} - no update response from CosmosDB")
+                return (
+                    jsonify(
+                        {
+                            "error": f"Unable to update message {message_id}. It either does not exist or the user does not have access to it."
+                        }
+                    ),
+                    404,
+                )
+        except Exception as cosmos_error:
+            error_message = str(cosmos_error)
+            logger.error(f"CosmosDB error updating message feedback: {error_message}")
+            
+            if "NotFound" in error_message or "not exist" in error_message:
+                # Try to verify if the message exists but with a different partition key
+                try:
+                    logger.info(f"Checking if message exists with different partition key")
+                    from azure.cosmos import exceptions
+                    
+                    try:
+                        # Try a direct query to find the message by ID only
+                        query = f"SELECT * FROM c WHERE c.id = '{message_id}'"
+                        messages = []
+                        async for item in current_app.cosmos_conversation_client.container_client.query_items(
+                            query=query,
+                            enable_cross_partition_query=True
+                        ):
+                            messages.append(item)
+                        
+                        if messages:
+                            found_user_id = messages[0].get("userId", "unknown")
+                            logger.info(f"Message found but with different user ID: {found_user_id}")
+                            return jsonify({
+                                "error": f"Message found but belongs to different user (found: {found_user_id}, requesting: {user_id})"
+                            }), 403
+                        else:
+                            logger.info(f"Message {message_id} not found in any partition")
+                            return jsonify({
+                                "error": f"Message {message_id} does not exist in the database"
+                            }), 404
+                            
+                    except Exception as query_error:
+                        logger.error(f"Error querying for message: {str(query_error)}")
+                        
+                except Exception as check_error:
+                    logger.error(f"Error during message existence check: {str(check_error)}")
+                
+                return jsonify({
+                    "error": f"Message {message_id} not found. It may have been deleted or never existed."
+                }), 404
+            else:
+                # General database error
+                return jsonify({
+                    "error": f"Database error: {error_message}"
+                }), 500
 
     except Exception as e:
         logging.exception("Exception in /history/message_feedback")
@@ -1477,7 +1528,7 @@ async def debug_cosmos_create():
                 try:
                     container_client = await database_client.create_container(
                         id=container_name,
-                        partition_key=PartitionKey(path="/userId")
+                        partition_key=PartitionKey(path="/id")
                     )
                     logger.info(f"Successfully created container {container_name}")
                 except Exception as e:
@@ -1503,7 +1554,7 @@ async def debug_cosmos_create():
                 logger.info(f"Successfully created test document with id {item_id}")
                 
                 # Delete the test item
-                await container_client.delete_item(item=item_id, partition_key='test-user')
+                await container_client.delete_item(item=item_id, partition_key=item_id)
                 logger.info(f"Successfully deleted test document with id {item_id}")
             except Exception as e:
                 logger.error(f"Failed to create/delete test document: {str(e)}")
@@ -1653,7 +1704,7 @@ async def debug_cosmos_permissions():
                                     results["tests"]["write_permission"] = "Success"
                                     
                                     # Clean up test item
-                                    await container.delete_item(item=created['id'], partition_key="test-user")
+                                    await container.delete_item(item=created['id'], partition_key=created['id'])
                                     logger.info(f"Successfully deleted test item")
                                 except Exception as e:
                                     logger.error(f"Error testing write permission: {str(e)}")
