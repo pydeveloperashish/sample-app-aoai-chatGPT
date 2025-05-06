@@ -849,14 +849,22 @@ async def update_message():
             conversation_query = f"SELECT c.conversationId FROM c WHERE c.id = '{message_id}' AND c.type = 'message'"
             conversation_id = None
             
-            query_options = {"enableCrossPartitionQuery": True}
-            async for item in current_app.cosmos_conversation_client.container_client.query_items(
-                query=conversation_query,
-                partition_key=None,
-                query_options=query_options
-            ):
-                conversation_id = item.get("conversationId")
-                break
+            try:
+                # Try direct item read first with the message ID as partition key
+                message = await current_app.cosmos_conversation_client.container_client.read_item(
+                    item=message_id, 
+                    partition_key=message_id
+                )
+                conversation_id = message.get("conversationId")
+                logger.info(f"Found conversation ID {conversation_id} from direct item read")
+            except Exception as e:
+                logger.info(f"Direct read failed, using query: {str(e)}")
+                # Fall back to query if direct read fails
+                async for item in current_app.cosmos_conversation_client.container_client.query_items(
+                    query=conversation_query
+                ):
+                    conversation_id = item.get("conversationId")
+                    break
                 
             if conversation_id:
                 # Get related messages
@@ -925,11 +933,9 @@ async def update_message():
                         # Try a direct query to find the message by ID only
                         query = f"SELECT * FROM c WHERE c.id = '{message_id}'"
                         messages = []
-                        query_options = {"enableCrossPartitionQuery": True}
+                        # Simplified query without options parameters
                         async for item in current_app.cosmos_conversation_client.container_client.query_items(
-                            query=query,
-                            partition_key=None,
-                            query_options=query_options
+                            query=query
                         ):
                             messages.append(item)
                         
@@ -1714,8 +1720,7 @@ async def debug_cosmos_permissions():
                                 logger.info("Testing ability to query container...")
                                 items = []
                                 async for item in container.query_items(
-                                    query="SELECT TOP 1 * FROM c",
-                                    query_options={"enableCrossPartitionQuery": True}
+                                    query="SELECT TOP 1 * FROM c"
                                 ):
                                     items.append(item)
                                 
@@ -1859,12 +1864,10 @@ async def debug_feedback():
         ]
         
         feedback_items = []
-        query_options = {"enableCrossPartitionQuery": True}
+        # Simplified query without query_options or partition_key
         async for item in current_app.cosmos_conversation_client.container_client.query_items(
             query=feedback_query,
-            parameters=parameters,
-            partition_key=None,
-            query_options=query_options
+            parameters=parameters
         ):
             # Truncate content to avoid overwhelming the response
             if 'content' in item and item['content']:
@@ -1906,12 +1909,10 @@ async def debug_feedback():
                 ]
                 
                 user_queries = []
-                query_options = {"enableCrossPartitionQuery": True}
+                # Simplified query without query_options or partition_key
                 async for query_item in current_app.cosmos_conversation_client.container_client.query_items(
                     query=user_query_search,
-                    parameters=query_params,
-                    partition_key=None,
-                    query_options=query_options
+                    parameters=query_params
                 ):
                     if 'content' in query_item:
                         content = query_item['content']
