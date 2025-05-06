@@ -319,6 +319,7 @@ class _AzureSearchSettings(BaseSettings, DatasourcePayloadConstructor):
     @model_validator(mode="after")
     def set_query_type(self) -> Self:
         self.query_type = to_snake(self.query_type)
+        return self
 
     def _set_filter_string(self, request: Request) -> str:
         if self.permitted_groups_column:

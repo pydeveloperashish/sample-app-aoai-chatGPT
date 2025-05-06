@@ -253,6 +253,35 @@ async def init_cosmosdb_client():
                 credential = app_settings.chat_history.account_key
 
             logger.info("Creating CosmosConversationClient...")
+            
+            # Try to access account first to verify basic connectivity
+            from azure.cosmos.aio import CosmosClient
+            from azure.cosmos import exceptions
+            
+            try:
+                logger.info("Testing basic account connectivity...")
+                async with CosmosClient(cosmos_endpoint, credential=credential) as test_client:
+                    # Just try to list databases to verify basic connectivity
+                    db_count = 0
+                    async for _ in test_client.list_databases():
+                        db_count += 1
+                    logger.info(f"Successfully connected to CosmosDB account, found {db_count} databases")
+            except exceptions.CosmosHttpResponseError as e:
+                if e.status_code == 401:
+                    logger.error("Authentication failed - check your credentials")
+                    raise ValueError("Authentication failed with status code 401") from e
+                elif e.status_code == 403:
+                    logger.error("Permission denied - your identity doesn't have access rights")
+                    raise ValueError("Permission denied with status code 403") from e
+                else:
+                    logger.error(f"HTTP error {e.status_code} when connecting to CosmosDB: {str(e)}")
+                    raise ValueError(f"CosmosDB HTTP error: {str(e)}") from e
+            except Exception as e:
+                logger.error(f"Error testing CosmosDB connectivity: {str(e)}")
+                raise ValueError(f"CosmosDB connection error: {str(e)}") from e
+            
+            # Now create the client
+            logger.info(f"Database and container verified, creating client...")
             logger.info(f"Database name: {app_settings.chat_history.database}")
             logger.info(f"Container name: {app_settings.chat_history.conversations_container}")
             logger.info(f"Enable feedback: {app_settings.chat_history.enable_feedback}")
@@ -273,6 +302,11 @@ async def init_cosmosdb_client():
                     logger.info("CosmosDB connection test successful!")
                 else:
                     logger.error(f"CosmosDB connection test failed: {error}")
+                    # If the database or container don't exist, we should create them
+                    if "database" in error.lower() and "not found" in error.lower():
+                        logger.warning("Database not found - may need to be created")
+                    elif "container" in error.lower() and "not found" in error.lower():
+                        logger.warning("Container not found - may need to be created")
                     cosmos_conversation_client = None
             except Exception as e:
                 logger.error(f"Error testing CosmosDB connection: {str(e)}")
@@ -643,9 +677,42 @@ async def conversation():
 @bp.route("/frontend_settings", methods=["GET"])
 def get_frontend_settings():
     try:
+        logger.info("=== Frontend Settings Request ===")
+        logger.info(f"Feedback enabled: {frontend_settings.get('feedback_enabled', False)}")
+        logger.info(f"Chat history button shown: {frontend_settings.get('ui', {}).get('show_chat_history_button', False)}")
+        
+        # Test that the settings are properly serializable
+        try:
+            serialized = json.dumps(frontend_settings)
+            # Try to verify it can be parsed back without issues
+            json.loads(serialized)
+            logger.info("Frontend settings successfully serialized to JSON")
+        except Exception as json_error:
+            logger.error(f"Error serializing frontend settings to JSON: {str(json_error)}")
+            # Try to identify the problematic field
+            for key, value in frontend_settings.items():
+                try:
+                    json.dumps({key: value})
+                except Exception as e:
+                    logger.error(f"Field '{key}' has invalid value: {repr(value)}")
+            
+            # Return a sanitized version with the problematic fields removed
+            sanitized_settings = copy.deepcopy(frontend_settings)
+            if 'ui' in sanitized_settings:
+                for key in ['title', 'chat_title', 'chat_description']:
+                    if key in sanitized_settings['ui']:
+                        sanitized_settings['ui'][key] = str(sanitized_settings['ui'][key])
+            
+            logger.info("Returning sanitized frontend settings")
+            return jsonify(sanitized_settings), 200
+        
+        # Dump all frontend settings for debugging
+        if DEBUG:
+            logger.debug(f"Complete frontend settings: {json.dumps(frontend_settings, indent=2)}")
+        
         return jsonify(frontend_settings), 200
     except Exception as e:
-        logging.exception("Exception in /frontend_settings")
+        logger.exception("Exception in /frontend_settings")
         return jsonify({"error": str(e)}), 500
 
 
@@ -1453,6 +1520,213 @@ async def debug_cosmos_create():
                 
     except Exception as e:
         logger.exception(f"Exception in /debug/cosmos/create: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+
+@bp.route("/debug/cosmos/permissions", methods=["GET"])
+async def debug_cosmos_permissions():
+    """
+    Debug endpoint to test specific permissions to the CosmosDB database and container.
+    """
+    if not app_settings.chat_history:
+        logger.error("CosmosDB not configured - no chat_history settings found")
+        return jsonify({
+            "error": "CosmosDB not configured", 
+            "settings": "missing"
+        }), 404
+        
+    try:
+        cosmos_endpoint = f"https://{app_settings.chat_history.account}.documents.azure.com:443/"
+        logger.info(f"Testing permissions for CosmosDB at {cosmos_endpoint}")
+        
+        # Log auth method
+        auth_type = "account_key" if app_settings.chat_history.account_key else "managed_identity"
+        logger.info(f"Authentication method: {auth_type}")
+        
+        if not app_settings.chat_history.account_key:
+            logger.info("Using managed identity for authentication")
+            async with DefaultAzureCredential() as cred:
+                credential = cred
+        else:
+            logger.info("Using account key for authentication")
+            credential = app_settings.chat_history.account_key
+        
+        # Try a direct test with detailed errors
+        from azure.cosmos.aio import CosmosClient
+        from azure.cosmos import exceptions
+        
+        results = {
+            "account": app_settings.chat_history.account,
+            "database": app_settings.chat_history.database,
+            "container": app_settings.chat_history.conversations_container,
+            "auth_type": auth_type,
+            "tests": {}
+        }
+        
+        # Test account access
+        try:
+            logger.info("Testing account connection...")
+            async with CosmosClient(cosmos_endpoint, credential=credential) as client:
+                logger.info("Successfully connected to CosmosDB account")
+                results["tests"]["account_connection"] = "Success"
+                
+                # Try to list databases
+                logger.info("Testing ability to list databases...")
+                database_list = []
+                async for database in client.list_databases():
+                    database_list.append(database["id"])
+                
+                logger.info(f"Found databases: {database_list}")
+                results["tests"]["list_databases"] = {
+                    "status": "Success",
+                    "found": database_list
+                }
+                
+                # Try to access the specific database
+                try:
+                    database_name = app_settings.chat_history.database
+                    logger.info(f"Testing database access: {database_name}")
+                    database = client.get_database_client(database_name)
+                    await database.read()
+                    logger.info(f"Successfully accessed database '{database_name}'")
+                    results["tests"]["database_access"] = "Success"
+                    
+                    # Try to list containers
+                    try:
+                        logger.info("Testing ability to list containers...")
+                        container_list = []
+                        async for container in database.list_containers():
+                            container_list.append(container["id"])
+                        
+                        logger.info(f"Found containers: {container_list}")
+                        results["tests"]["list_containers"] = {
+                            "status": "Success",
+                            "found": container_list
+                        }
+                        
+                        # Try to access the container
+                        try:
+                            container_name = app_settings.chat_history.conversations_container
+                            logger.info(f"Testing container access: {container_name}")
+                            container = database.get_container_client(container_name)
+                            await container.read()
+                            logger.info(f"Successfully accessed container '{container_name}'")
+                            results["tests"]["container_access"] = "Success"
+                            
+                            # Try to query container
+                            try:
+                                logger.info("Testing ability to query container...")
+                                items = []
+                                async for item in container.query_items(
+                                    query="SELECT TOP 1 * FROM c",
+                                    enable_cross_partition_query=True
+                                ):
+                                    items.append(item)
+                                
+                                if items:
+                                    logger.info(f"Successfully queried container, found {len(items)} items")
+                                    sample_keys = list(items[0].keys()) if items else []
+                                    results["tests"]["query_container"] = {
+                                        "status": "Success",
+                                        "found_items": len(items),
+                                        "sample_keys": sample_keys
+                                    }
+                                else:
+                                    logger.info("Container is empty but query was successful")
+                                    results["tests"]["query_container"] = {
+                                        "status": "Success", 
+                                        "found_items": 0
+                                    }
+                                
+                                # Try to create a test item
+                                try:
+                                    logger.info("Testing write permission...")
+                                    test_item = {
+                                        "id": f"test-{uuid.uuid4()}",
+                                        "type": "test",
+                                        "userId": "test-user",
+                                        "createdAt": datetime.utcnow().isoformat()
+                                    }
+                                    
+                                    created = await container.create_item(body=test_item)
+                                    logger.info(f"Successfully created test item with id: {created['id']}")
+                                    results["tests"]["write_permission"] = "Success"
+                                    
+                                    # Clean up test item
+                                    await container.delete_item(item=created['id'], partition_key="test-user")
+                                    logger.info(f"Successfully deleted test item")
+                                except Exception as e:
+                                    logger.error(f"Error testing write permission: {str(e)}")
+                                    results["tests"]["write_permission"] = {
+                                        "status": "Failed",
+                                        "error": str(e)
+                                    }
+                            except Exception as e:
+                                logger.error(f"Error querying container: {str(e)}")
+                                results["tests"]["query_container"] = {
+                                    "status": "Failed",
+                                    "error": str(e)
+                                }
+                        except Exception as e:
+                            logger.error(f"Error accessing container: {str(e)}")
+                            results["tests"]["container_access"] = {
+                                "status": "Failed",
+                                "error": str(e)
+                            }
+                    except Exception as e:
+                        logger.error(f"Error listing containers: {str(e)}")
+                        results["tests"]["list_containers"] = {
+                            "status": "Failed",
+                            "error": str(e)
+                        }
+                except exceptions.CosmosResourceNotFoundError:
+                    logger.error(f"Database '{database_name}' not found")
+                    results["tests"]["database_access"] = {
+                        "status": "Failed",
+                        "error": f"Database '{database_name}' not found"
+                    }
+                except exceptions.CosmosHttpResponseError as e:
+                    logger.error(f"Error accessing database: {str(e)}")
+                    if e.status_code == 403:
+                        results["tests"]["database_access"] = {
+                            "status": "Failed",
+                            "error": "Permission denied (403 Forbidden)"
+                        }
+                    else:
+                        results["tests"]["database_access"] = {
+                            "status": "Failed",
+                            "error": f"HTTP Error {e.status_code}: {str(e)}"
+                        }
+                except Exception as e:
+                    logger.error(f"Error accessing database: {str(e)}")
+                    results["tests"]["database_access"] = {
+                        "status": "Failed",
+                        "error": str(e)
+                    }
+        except exceptions.CosmosHttpResponseError as e:
+            if e.status_code == 401:
+                logger.error(f"Authentication failed: {str(e)}")
+                results["tests"]["account_connection"] = {
+                    "status": "Failed",
+                    "error": "Authentication failed (401 Unauthorized)"
+                }
+            else:
+                logger.error(f"HTTP error connecting to CosmosDB: {str(e)}")
+                results["tests"]["account_connection"] = {
+                    "status": "Failed",
+                    "error": f"HTTP Error {e.status_code}: {str(e)}"
+                }
+        except Exception as e:
+            logger.error(f"Error connecting to CosmosDB: {str(e)}")
+            results["tests"]["account_connection"] = {
+                "status": "Failed",
+                "error": str(e)
+            }
+            
+        return jsonify(results), 200
+                
+    except Exception as e:
+        logger.exception(f"Exception in /debug/cosmos/permissions: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 
