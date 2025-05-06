@@ -171,10 +171,17 @@ class CosmosConversationClient():
             # Use message_id as the partition key instead of user_id
             message = await self.container_client.read_item(item=message_id, partition_key=message_id)
             if message:
+                print(f"Found message {message_id} - role: {message.get('role')}, content length: {len(message.get('content', ''))}")
+                print(f"Setting feedback from '{message.get('feedback', '')}' to '{feedback}'")
+                
                 message['feedback'] = feedback
+                message['updatedAt'] = datetime.utcnow().isoformat()
+                
                 resp = await self.container_client.upsert_item(message)
+                print(f"Feedback updated successfully for message {message_id}")
                 return resp
             else:
+                print(f"Message {message_id} found but returned empty document")
                 return False
         except exceptions.CosmosResourceNotFoundError as e:
             # Log details for debugging

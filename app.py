@@ -844,6 +844,47 @@ async def update_message():
 
         ## update the message in cosmos
         try:
+            # First get the conversation and surrounding messages to log context
+            # Find which conversation this message belongs to
+            conversation_query = f"SELECT c.conversationId FROM c WHERE c.id = '{message_id}' AND c.type = 'message'"
+            conversation_id = None
+            
+            async for item in current_app.cosmos_conversation_client.container_client.query_items(
+                query=conversation_query,
+                enable_cross_partition_query=True
+            ):
+                conversation_id = item.get("conversationId")
+                break
+                
+            if conversation_id:
+                # Get related messages
+                messages = await current_app.cosmos_conversation_client.get_messages(user_id, conversation_id)
+                
+                # Find the rated message and previous user message
+                rated_message = None
+                user_query = None
+                
+                for i, msg in enumerate(messages):
+                    if msg["id"] == message_id:
+                        rated_message = msg
+                        # Look for the most recent user message before this one
+                        for j in range(i-1, -1, -1):
+                            if messages[j]["role"] == "user":
+                                user_query = messages[j]
+                                break
+                        break
+                
+                # Log the feedback with context
+                if rated_message and user_query:
+                    logger.info("=== FEEDBACK DETAILS ===")
+                    logger.info(f"Conversation ID: {conversation_id}")
+                    logger.info(f"Feedback: {message_feedback}")
+                    logger.info(f"User query: {user_query.get('content', '')[:100]}...")
+                    logger.info(f"Assistant answer: {rated_message.get('content', '')[:100]}...")
+                else:
+                    logger.info(f"Feedback {message_feedback} given for message {message_id}, but couldn't find related messages")
+            
+            # Update the message with feedback
             updated_message = await current_app.cosmos_conversation_client.update_message_feedback(
                 user_id, message_id, message_feedback
             )
@@ -1778,6 +1819,108 @@ async def debug_cosmos_permissions():
                 
     except Exception as e:
         logger.exception(f"Exception in /debug/cosmos/permissions: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+
+@bp.route("/debug/feedback", methods=["GET"])
+async def debug_feedback():
+    """
+    Debug endpoint to retrieve all feedback entries for the current user.
+    """
+    await cosmos_db_ready.wait()
+    authenticated_user = get_authenticated_user_details(request_headers=request.headers)
+    user_id = authenticated_user["user_principal_id"]
+    
+    try:
+        if not current_app.cosmos_conversation_client:
+            logger.error("CosmosDB client is not initialized")
+            return jsonify({"error": "CosmosDB is not configured or not working"}), 500
+        
+        # Query for all messages with feedback
+        feedback_query = """
+        SELECT c.id, c.feedback, c.content, c.role, c.conversationId, c.createdAt, c.updatedAt 
+        FROM c 
+        WHERE c.userId = @userId 
+        AND c.type = 'message' 
+        AND IS_DEFINED(c.feedback) 
+        AND c.feedback <> ''
+        ORDER BY c.updatedAt DESC
+        """
+        
+        parameters = [
+            {
+                'name': '@userId',
+                'value': user_id
+            }
+        ]
+        
+        feedback_items = []
+        async for item in current_app.cosmos_conversation_client.container_client.query_items(
+            query=feedback_query,
+            parameters=parameters,
+            enable_cross_partition_query=True
+        ):
+            # Truncate content to avoid overwhelming the response
+            if 'content' in item and item['content']:
+                item['content'] = item['content'][:100] + "..." if len(item['content']) > 100 else item['content']
+            
+            feedback_items.append(item)
+        
+        logger.info(f"Found {len(feedback_items)} feedback items for user {user_id}")
+        
+        # For each feedback item, try to find the associated user query
+        for item in feedback_items:
+            conversation_id = item.get('conversationId')
+            if conversation_id:
+                # Find the most recent user message before this assistant message
+                user_query_search = """
+                SELECT TOP 1 c.content 
+                FROM c 
+                WHERE c.conversationId = @conversationId 
+                AND c.userId = @userId 
+                AND c.type = 'message' 
+                AND c.role = 'user' 
+                AND c.createdAt < @createdAt 
+                ORDER BY c.createdAt DESC
+                """
+                
+                query_params = [
+                    {
+                        'name': '@conversationId',
+                        'value': conversation_id
+                    },
+                    {
+                        'name': '@userId',
+                        'value': user_id
+                    },
+                    {
+                        'name': '@createdAt',
+                        'value': item.get('createdAt')
+                    }
+                ]
+                
+                user_queries = []
+                async for query_item in current_app.cosmos_conversation_client.container_client.query_items(
+                    query=user_query_search,
+                    parameters=query_params,
+                    enable_cross_partition_query=True
+                ):
+                    if 'content' in query_item:
+                        content = query_item['content']
+                        user_queries.append(content[:100] + "..." if len(content) > 100 else content)
+                
+                if user_queries:
+                    item['user_query'] = user_queries[0]
+                else:
+                    item['user_query'] = "No associated user query found"
+        
+        return jsonify({
+            "feedback_count": len(feedback_items),
+            "feedback_items": feedback_items
+        }), 200
+        
+    except Exception as e:
+        logger.exception(f"Exception in /debug/feedback: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 
