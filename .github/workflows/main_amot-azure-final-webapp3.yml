@@ -63,9 +63,17 @@ jobs:
           # Create a minimal .env file with just DOTENV_PATH
           echo "DOTENV_PATH=non_existent_file.env" > .env
           
-          # Start the application
-          echo "Starting Gunicorn with app:bp..."
-          exec gunicorn --bind=0.0.0.0 --timeout 600 --log-level debug app:bp
+          # List all Python modules in the current directory
+          echo "=== Available Python modules ==="
+          python -c "import pkgutil; print('\n'.join([p[1] for p in pkgutil.iter_modules()]))"
+          
+          # Check app.py content
+          echo "=== App.py main objects ==="
+          grep -E "^app|^bp" app.py
+          
+          # Start the application with the correct WSGI app
+          echo "Starting Gunicorn with app:create_app()..."
+          exec gunicorn --bind=0.0.0.0 --timeout 600 --log-level debug "app:create_app()"
           EOF
           chmod +x startup.sh
 
