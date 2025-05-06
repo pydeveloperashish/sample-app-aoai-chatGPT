@@ -849,9 +849,11 @@ async def update_message():
             conversation_query = f"SELECT c.conversationId FROM c WHERE c.id = '{message_id}' AND c.type = 'message'"
             conversation_id = None
             
+            query_options = {"enableCrossPartitionQuery": True}
             async for item in current_app.cosmos_conversation_client.container_client.query_items(
                 query=conversation_query,
-                enable_cross_partition_query=True
+                partition_key=None,
+                query_options=query_options
             ):
                 conversation_id = item.get("conversationId")
                 break
@@ -923,9 +925,11 @@ async def update_message():
                         # Try a direct query to find the message by ID only
                         query = f"SELECT * FROM c WHERE c.id = '{message_id}'"
                         messages = []
+                        query_options = {"enableCrossPartitionQuery": True}
                         async for item in current_app.cosmos_conversation_client.container_client.query_items(
                             query=query,
-                            enable_cross_partition_query=True
+                            partition_key=None,
+                            query_options=query_options
                         ):
                             messages.append(item)
                         
@@ -1711,7 +1715,7 @@ async def debug_cosmos_permissions():
                                 items = []
                                 async for item in container.query_items(
                                     query="SELECT TOP 1 * FROM c",
-                                    enable_cross_partition_query=True
+                                    query_options={"enableCrossPartitionQuery": True}
                                 ):
                                     items.append(item)
                                 
@@ -1855,10 +1859,12 @@ async def debug_feedback():
         ]
         
         feedback_items = []
+        query_options = {"enableCrossPartitionQuery": True}
         async for item in current_app.cosmos_conversation_client.container_client.query_items(
             query=feedback_query,
             parameters=parameters,
-            enable_cross_partition_query=True
+            partition_key=None,
+            query_options=query_options
         ):
             # Truncate content to avoid overwhelming the response
             if 'content' in item and item['content']:
@@ -1900,10 +1906,12 @@ async def debug_feedback():
                 ]
                 
                 user_queries = []
+                query_options = {"enableCrossPartitionQuery": True}
                 async for query_item in current_app.cosmos_conversation_client.container_client.query_items(
                     query=user_query_search,
                     parameters=query_params,
-                    enable_cross_partition_query=True
+                    partition_key=None,
+                    query_options=query_options
                 ):
                     if 'content' in query_item:
                         content = query_item['content']
