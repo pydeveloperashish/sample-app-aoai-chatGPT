@@ -1,22 +1,16 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<svg
-   version="1.1"
-   width="64"
-   height="64"
-   viewBox="0 0 64 64"
-   xmlns="http://www.w3.org/2000/svg">
-  <style>
-    .icon { fill: #0078D4; }
-  </style>
-  
-  <!-- Blue circle icon -->
-  <circle class="icon" cx="32" cy="32" r="30" />
-  
-  <!-- Inner circles representing data/connections -->
-  <circle fill="white" cx="32" cy="32" r="22" />
-  <circle class="icon" cx="32" cy="32" r="14" />
-  <circle fill="white" cx="32" cy="32" r="6" />
-  
-  <!-- A simple "A" in the middle -->
-  <text x="23" y="40" fill="#0078D4" font-family="Arial" font-weight="bold" font-size="20">A</text>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <g>
+    <!-- "a" -->
+    <path d="M8,48 Q8,32 20,32 Q32,32 32,48 Q32,64 20,64 Q8,64 8,48 Z" fill="#0078D4"/>
+    <!-- "m" -->
+    <path d="M36,64 Q36,48 44,48 Q52,48 52,64" fill="none" stroke="#0078D4" stroke-width="8" stroke-linecap="round"/>
+    <!-- "o" with blue sphere -->
+    <ellipse cx="56" cy="48" rx="8" ry="8" fill="#0078D4"/>
+    <circle cx="56" cy="48" r="6" fill="#1CA9E3"/>
+    <ellipse cx="54" cy="46" rx="2" ry="1.5" fill="#fff" opacity="0.7"/>
+    <!-- "t" (simplified) -->
+    <rect x="60" y="32" width="4" height="32" rx="2" fill="#0078D4"/>
+    <rect x="58" y="32" width="8" height="4" rx="2" fill="#0078D4"/>
+  </g>
 </svg> 
