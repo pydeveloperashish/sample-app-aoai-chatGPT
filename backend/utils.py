@@ -95,10 +95,12 @@ def format_non_streaming_response(chatCompletion, history_metadata, apim_request
                 if isinstance(context_obj, dict) and "citations" in context_obj:
                     for citation in context_obj["citations"]:
                         # If full_content is not provided, use content as the full content
+                        # This field contains the complete document/chunk text to display in the citation panel
                         if not citation.get('full_content'):
                             citation['full_content'] = citation.get('content', '')
                         
                         # If highlight_text is not provided, use content as the text to highlight
+                        # This field specifies which text should be highlighted within the full_content
                         if not citation.get('highlight_text'):
                             citation['highlight_text'] = citation.get('content', '')
                 
@@ -138,10 +140,12 @@ def format_stream_response(chatCompletionChunk, history_metadata, apim_request_i
                 if isinstance(context_obj, dict) and "citations" in context_obj:
                     for citation in context_obj["citations"]:
                         # If full_content is not provided, use content as the full content
+                        # This field contains the complete document/chunk text to display in the citation panel
                         if not citation.get('full_content'):
                             citation['full_content'] = citation.get('content', '')
                         
                         # If highlight_text is not provided, use content as the text to highlight
+                        # This field specifies which text should be highlighted within the full_content
                         if not citation.get('highlight_text'):
                             citation['highlight_text'] = citation.get('content', '')
                             
@@ -210,10 +214,12 @@ def format_pf_non_streaming_response(
             citations = chatCompletion[citations_field_name]
             for citation in citations:
                 # If full_content is not provided, use content as the full content
+                # This field contains the complete document/chunk text to display in the citation panel
                 if not citation.get('full_content'):
                     citation['full_content'] = citation.get('content', '')
                 
                 # If highlight_text is not provided, use content as the text to highlight
+                # This field specifies which text should be highlighted within the full_content
                 if not citation.get('highlight_text'):
                     citation['highlight_text'] = citation.get('content', '')
             

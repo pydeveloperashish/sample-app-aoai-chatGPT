@@ -980,7 +980,7 @@ const Chat = () => {
                 />
               </Stack>
               <div className={styles.citationCard}>
-                <FontIcon iconName="Page" className={styles.citationCardIcon} />
+                <FontIcon iconName="DocumentSearch" className={styles.citationCardIcon} />
                 <div style={{ flex: 1 }}>
                   <h5
                     className={styles.citationPanelTitle}
@@ -991,7 +991,7 @@ const Chat = () => {
                         : activeCitation.title ?? ''
                     }
                     onClick={() => onViewSource(activeCitation)}>
-                    {activeCitation.title}
+                    {activeCitation.title || "Source document"}
                   </h5>
                   <div tabIndex={0}>
                     {activeCitation.full_content ? (
