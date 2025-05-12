@@ -580,13 +580,9 @@ const Chat = () => {
 
         // Returning the prettified error message
         if (reason !== '') {
-          return (
-            'The prompt was filtered due to triggering Azure OpenAI's content filtering system.\n' +
-            'Reason: This prompt contains content flagged as ' +
-            reason +
-            '\n\n' +
-            'Please modify your prompt and retry. Learn more: https://go.microsoft.com/fwlink/?linkid=2198766'
-          )
+          return 'The prompt was filtered due to triggering Azure OpenAI\'s content filtering system.\n' +
+            'Reason: This prompt contains content flagged as ' + reason +
+            '\n\nPlease modify your prompt and retry. Learn more: https://go.microsoft.com/fwlink/?linkid=2198766';
         }
       }
     } catch (e) {
