@@ -44,6 +44,9 @@ jobs:
           npm install
           npm run build
 
+      - name: List frontend build output
+        run: ls -l frontend/dist || echo "No dist directory found"
+
       - name: Copy frontend build output to static for deployment
         run: |
           mkdir -p static
