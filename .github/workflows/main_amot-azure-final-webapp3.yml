@@ -50,12 +50,7 @@ jobs:
           find .
 
       - name: List frontend build output
-        run: ls -l frontend/dist || echo "No dist directory found"
-
-      - name: Copy frontend build output to static for deployment
-        run: |
-          mkdir -p static
-          cp -r frontend/dist/* static/
+        run: ls -l static || echo "No static directory found"
 
       # Optional: Add step to run tests here (PyTest, Django test suites, etc.)
 
