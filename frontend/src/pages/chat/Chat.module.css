@@ -396,3 +396,14 @@ a {
     max-width: 100%;
   }
 }
+
+.highlightCitation {
+  background-color: #fff7b2; /* Light yellow background */
+  padding: 1px 2px;
+  border-radius: 2px;
+  transition: background-color 0.2s;
+}
+
+.highlightCitation:hover {
+  background-color: #ffeb3b; /* Slightly darker yellow on hover */
+}

@@ -701,6 +701,7 @@ const Chat = () => {
   const onShowCitation = (citation: Citation) => {
     setActiveCitation(citation)
     setIsCitationPanelOpen(true)
+    setIsIntentsPanelOpen(false)
   }
 
   const onShowExecResult = (answerId: string) => {
@@ -752,6 +753,23 @@ const Chat = () => {
       clearingChat ||
       appStateContext?.state.chatHistoryLoadingState === ChatHistoryLoadingState.Loading
     )
+  }
+
+  // New function to safely highlight text within HTML content
+  const highlightTextInContent = (content: string, textToHighlight: string) => {
+    if (!textToHighlight || !content) return content;
+    
+    try {
+      // Escape special regex characters in the text to highlight
+      const escapedText = textToHighlight.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      return content.replace(
+        new RegExp(escapedText, 'gi'),
+        match => `<span class="${styles.highlightCitation}">${match}</span>`
+      );
+    } catch (error) {
+      console.error('Error highlighting text:', error);
+      return content;
+    }
   }
 
   return (
@@ -976,13 +994,29 @@ const Chat = () => {
                     {activeCitation.title}
                   </h5>
                   <div tabIndex={0}>
-                    <ReactMarkdown
-                      linkTarget="_blank"
-                      className={styles.citationPanelContent}
-                      children={DOMPurify.sanitize(activeCitation.content, { ALLOWED_TAGS: XSSAllowTags })}
-                      remarkPlugins={[remarkGfm]}
-                      rehypePlugins={[rehypeRaw]}
-                    />
+                    {activeCitation.full_content ? (
+                      <ReactMarkdown
+                        linkTarget="_blank"
+                        className={styles.citationPanelContent}
+                        children={DOMPurify.sanitize(
+                          highlightTextInContent(
+                            activeCitation.full_content,
+                            activeCitation.highlight_text || activeCitation.content
+                          ),
+                          { ALLOWED_TAGS: [...XSSAllowTags, 'span'] }
+                        )}
+                        remarkPlugins={[remarkGfm]}
+                        rehypePlugins={[rehypeRaw]}
+                      />
+                    ) : (
+                      <ReactMarkdown
+                        linkTarget="_blank"
+                        className={styles.citationPanelContent}
+                        children={DOMPurify.sanitize(activeCitation.content, { ALLOWED_TAGS: XSSAllowTags })}
+                        remarkPlugins={[remarkGfm]}
+                        rehypePlugins={[rehypeRaw]}
+                      />
+                    )}
                   </div>
                 </div>
               </div>

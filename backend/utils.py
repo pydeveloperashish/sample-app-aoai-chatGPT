@@ -90,6 +90,18 @@ def format_non_streaming_response(chatCompletion, history_metadata, apim_request
         message = chatCompletion.choices[0].message
         if message:
             if hasattr(message, "context"):
+                # If context contains citations, enhance them with full_content and highlight_text
+                context_obj = message.context
+                if isinstance(context_obj, dict) and "citations" in context_obj:
+                    for citation in context_obj["citations"]:
+                        # If full_content is not provided, use content as the full content
+                        if not citation.get('full_content'):
+                            citation['full_content'] = citation.get('content', '')
+                        
+                        # If highlight_text is not provided, use content as the text to highlight
+                        if not citation.get('highlight_text'):
+                            citation['highlight_text'] = citation.get('content', '')
+                
                 response_obj["choices"][0]["messages"].append(
                     {
                         "role": "tool",
@@ -121,6 +133,18 @@ def format_stream_response(chatCompletionChunk, history_metadata, apim_request_i
         delta = chatCompletionChunk.choices[0].delta
         if delta:
             if hasattr(delta, "context"):
+                # If context contains citations, enhance them with full_content and highlight_text
+                context_obj = delta.context
+                if isinstance(context_obj, dict) and "citations" in context_obj:
+                    for citation in context_obj["citations"]:
+                        # If full_content is not provided, use content as the full content
+                        if not citation.get('full_content'):
+                            citation['full_content'] = citation.get('content', '')
+                        
+                        # If highlight_text is not provided, use content as the text to highlight
+                        if not citation.get('highlight_text'):
+                            citation['highlight_text'] = citation.get('content', '')
+                            
                 messageObj = {"role": "tool", "content": json.dumps(delta.context)}
                 response_obj["choices"][0]["messages"].append(messageObj)
                 return response_obj
@@ -182,7 +206,18 @@ def format_pf_non_streaming_response(
                 "content": chatCompletion[response_field_name] 
             })
         if citations_field_name in chatCompletion:
-            citation_content= {"citations": chatCompletion[citations_field_name]}
+            # Enhance citations with full_content and highlight_text if not already present
+            citations = chatCompletion[citations_field_name]
+            for citation in citations:
+                # If full_content is not provided, use content as the full content
+                if not citation.get('full_content'):
+                    citation['full_content'] = citation.get('content', '')
+                
+                # If highlight_text is not provided, use content as the text to highlight
+                if not citation.get('highlight_text'):
+                    citation['highlight_text'] = citation.get('content', '')
+            
+            citation_content= {"citations": citations}
             messages.append({ 
                 "role": "tool",
                 "content": json.dumps(citation_content)
