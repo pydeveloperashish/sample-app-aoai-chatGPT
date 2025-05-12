@@ -44,6 +44,7 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
   const FEEDBACK_ENABLED =
     appStateContext?.state.frontendSettings?.feedback_enabled && appStateContext?.state.isCosmosDBAvailable?.cosmosDB
   const SANITIZE_ANSWER = appStateContext?.state.frontendSettings?.sanitize_answer
+  const [activeCitationId, setActiveCitationId] = useState<string | null>(null)
 
   const handleChevronClick = () => {
     setChevronIsExpanded(!chevronIsExpanded)
@@ -238,6 +239,25 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
         <SyntaxHighlighter style={nord} language={language} PreTag="div" {...props}>
           {codeString}
         </SyntaxHighlighter>
+      )
+    },
+    sup({ node, ...props }: { node: any; [key: string]: any }) {
+      // Try to extract citation id from the superscript text
+      const citationText = props.children[0]
+      // Find the citation object with this reindex_id
+      const citation = parsedAnswer?.citations.find(c => c.reindex_id === citationText)
+      const isActive = citation && citation.id === activeCitationId
+      return (
+        <sup
+          className={isActive ? styles.highlightCitation : styles.clickableSup}
+          style={{ cursor: 'pointer' }}
+          onClick={() => {
+            setActiveCitationId(citation?.id || null)
+            if (citation) onCitationClicked(citation)
+          }}
+        >
+          {citationText}
+        </sup>
       )
     }
   }

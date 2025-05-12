@@ -201,3 +201,28 @@ sup {
     margin-bottom: 5px;
   }
 }
+
+.highlightCitation {
+  background: #fff7b2;
+  border-radius: 3px;
+  transition: background 0.2s;
+}
+
+.citationCard {
+  background: #f8fafc;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  padding: 12px 16px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.citationCardIcon {
+  color: #115ea3;
+  font-size: 20px;
+  margin-right: 8px;
+  flex-shrink: 0;
+}
