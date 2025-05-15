@@ -772,11 +772,55 @@ const Chat = () => {
       const normalizedContent = content.replace(/\s+/g, ' ').trim();
       const normalizedHighlight = textToHighlight.replace(/\s+/g, ' ').trim();
       
+      // Make sure we're not trying to highlight the entire content
+      if (normalizedHighlight.length / normalizedContent.length > 0.7) {
+        // If the highlight is more than 70% of the content, find a key sentence
+        const sentences = normalizedContent.match(/[^.!?]+[.!?]+/g) || [];
+        if (sentences.length > 1) {
+          // Just highlight the first couple of sentences
+          const keyText = sentences.slice(0, Math.min(2, sentences.length)).join(' ');
+          const escapedText = keyText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const regex = new RegExp(`(${escapedText})`, 'gi');
+          return normalizedContent.replace(
+            regex,
+            match => `<span class="${styles.highlightCitation}">${match}</span>`
+          );
+        }
+      }
+      
       // Escape special regex characters in the text to highlight
       const escapedText = normalizedHighlight.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       
+      // If the highlight is too long, we might need to split it into manageable chunks
+      if (escapedText.length > 200) {
+        // Try finding first 150 characters as a highlight
+        const shorterHighlight = escapedText.substring(0, 150);
+        const regex = new RegExp(`(${shorterHighlight})`, 'gi');
+        if (normalizedContent.match(regex)) {
+          return normalizedContent.replace(
+            regex,
+            match => `<span class="${styles.highlightCitation}">${match}</span>`
+          );
+        }
+      }
+      
       // Create a case-insensitive regex to match the text
       const regex = new RegExp(`(${escapedText})`, 'gi');
+      
+      // Check if there are any matches
+      if (!normalizedContent.match(regex)) {
+        // If no matches, try to highlight the first sentence
+        const sentences = normalizedContent.match(/[^.!?]+[.!?]+/g) || [];
+        if (sentences.length > 0) {
+          const firstSentence = sentences[0];
+          const escapedSentence = firstSentence.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const sentenceRegex = new RegExp(`(${escapedSentence})`, 'gi');
+          return normalizedContent.replace(
+            sentenceRegex,
+            match => `<span class="${styles.highlightCitation}">${match}</span>`
+          );
+        }
+      }
       
       // Replace all occurrences with highlighted version
       return normalizedContent.replace(
@@ -785,7 +829,17 @@ const Chat = () => {
       );
     } catch (error) {
       console.error('Error highlighting text:', error);
-      return content;
+      
+      // Fallback to highlighting first 100 characters
+      try {
+        const firstPart = content.substring(0, Math.min(100, content.length));
+        return content.replace(
+          firstPart,
+          `<span class="${styles.highlightCitation}">${firstPart}</span>`
+        );
+      } catch {
+        return content;
+      }
     }
   }
 

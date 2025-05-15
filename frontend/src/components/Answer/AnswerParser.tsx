@@ -38,8 +38,32 @@ export function extractHighlightContext(content: string, textToHighlight: string
 
   // Normalize whitespace in both strings for better matching
   const normalizedContent = content.replace(/\s+/g, ' ').trim();
-  const normalizedHighlight = textToHighlight.replace(/\s+/g, ' ').trim();
-
+  
+  // If textToHighlight is too long (likely the entire content), extract a smaller portion
+  // This is an important fix - we don't want to highlight the entire content
+  let normalizedHighlight = textToHighlight.replace(/\s+/g, ' ').trim();
+  if (normalizedHighlight.length > 200) {
+    // Extract key sentences if the highlight is too long (likely the whole document)
+    const sentences = normalizedContent.match(/[^.!?]+[.!?]+/g) || [];
+    if (sentences.length > 2) {
+      // Use middle sentences as they're often most relevant
+      const middleIndex = Math.floor(sentences.length / 2);
+      const relevantSentences = sentences.slice(
+        Math.max(0, middleIndex - 1), 
+        Math.min(sentences.length, middleIndex + 2)
+      ).join(' ');
+      normalizedHighlight = relevantSentences;
+    } else {
+      // If there aren't enough sentences, just take a portion from the middle
+      const startPos = Math.floor(normalizedContent.length / 2) - 100;
+      const endPos = startPos + 200;
+      normalizedHighlight = normalizedContent.substring(
+        Math.max(0, startPos),
+        Math.min(normalizedContent.length, endPos)
+      );
+    }
+  }
+  
   // Find the position of the highlight text in the content
   const highlightPos = normalizedContent.toLowerCase().indexOf(normalizedHighlight.toLowerCase());
   
@@ -49,30 +73,53 @@ export function extractHighlightContext(content: string, textToHighlight: string
     const partialPos = normalizedContent.toLowerCase().indexOf(partialHighlight.toLowerCase());
     
     if (partialPos === -1) {
-      // If still no match, just return the original content and highlight
-      return { 
-        contextText: content, 
-        highlightText: textToHighlight
+      // If still no match, find a key sentence or phrase
+      const sentences = normalizedContent.match(/[^.!?]+[.!?]+/g) || [];
+      if (sentences.length > 0) {
+        // Just use the first sentence
+        return {
+          contextText: normalizedContent,
+          highlightText: sentences[0]
+        };
       }
+      
+      // If there are no sentences, just return a segment
+      return { 
+        contextText: normalizedContent,
+        highlightText: normalizedContent.substring(0, Math.min(150, normalizedContent.length))
+      };
     }
     
     // Extract the context around the partial match
     const startPos = Math.max(0, partialPos - 100);
     const endPos = Math.min(normalizedContent.length, partialPos + partialHighlight.length + 100);
     return {
-      contextText: normalizedContent.substring(startPos, endPos),
-      highlightText: normalizedContent.substring(partialPos, partialPos + partialHighlight.length)
-    }
+      contextText: normalizedContent,
+      highlightText: normalizedContent.substring(partialPos, partialPos + Math.min(150, normalizedContent.length - partialPos))
+    };
   }
   
-  // Extract a window of text around the highlight (100 chars before and after)
-  const startPos = Math.max(0, highlightPos - 100);
-  const endPos = Math.min(normalizedContent.length, highlightPos + normalizedHighlight.length + 100);
+  // Extract a window of text around the highlight
+  const startHighlight = Math.max(0, highlightPos);
+  const endHighlight = Math.min(normalizedContent.length, highlightPos + normalizedHighlight.length);
+  
+  // Make sure we're not highlighting the entire content
+  if (endHighlight - startHighlight > normalizedContent.length * 0.8) {
+    // If highlight is more than 80% of content, just highlight a key part
+    const middlePoint = Math.floor(normalizedContent.length / 2);
+    return {
+      contextText: normalizedContent,
+      highlightText: normalizedContent.substring(
+        Math.max(0, middlePoint - 75),
+        Math.min(normalizedContent.length, middlePoint + 75)
+      )
+    };
+  }
   
   return {
-    contextText: normalizedContent.substring(startPos, endPos),
-    highlightText: normalizedContent.substring(highlightPos, highlightPos + normalizedHighlight.length)
-  }
+    contextText: normalizedContent,
+    highlightText: normalizedContent.substring(startHighlight, endHighlight)
+  };
 }
 
 export function parseAnswer(answer: AskResponse): ParsedAnswer {
@@ -96,16 +143,48 @@ export function parseAnswer(answer: AskResponse): ParsedAnswer {
       
       // Process content for better highlighting
       if (citation.content) {
-        // If the citation doesn't have highlight_text or full_content, set them properly
+        // If the citation doesn't have full_content, set it properly
         if (!citation.full_content) {
           citation.full_content = citation.content
         }
         
-        // Extract a more precise highlight context
-        const { contextText, highlightText } = extractHighlightContext(citation.content, citation.content)
-        
-        // Use the extracted highlight text, or fall back to the original content
-        citation.highlight_text = highlightText || citation.content
+        // Check if the citation content is too long (likely the entire document)
+        // Important: We need to extract only a relevant portion to highlight
+        if (citation.content.length > 300) {
+          // Try to use context from answer to find relevant citation text
+          // Look for some words from before/after the citation in the content
+          let relevantContent = citation.content
+          
+          // Extract key phrases from the text around the citation
+          const beforeWords = textBeforeLink.split(/\s+/).slice(-5).join(' ');
+          const afterWords = textAfterLink.split(/\s+/).slice(0, 5).join(' ');
+          
+          // Try to find these phrases in the citation content
+          let foundContext = false;
+          if (beforeWords && citation.content.includes(beforeWords)) {
+            const contextStart = citation.content.indexOf(beforeWords);
+            const contextEnd = Math.min(contextStart + 200, citation.content.length);
+            relevantContent = citation.content.substring(contextStart, contextEnd);
+            foundContext = true;
+          } else if (afterWords && citation.content.includes(afterWords)) {
+            const contextEnd = citation.content.indexOf(afterWords) + afterWords.length;
+            const contextStart = Math.max(0, contextEnd - 200);
+            relevantContent = citation.content.substring(contextStart, contextEnd);
+            foundContext = true;
+          }
+          
+          // If we couldn't find context, use the extraction function
+          if (!foundContext) {
+            const { highlightText } = extractHighlightContext(citation.content, citation.content);
+            relevantContent = highlightText || citation.content.substring(0, Math.min(200, citation.content.length));
+          }
+          
+          // Set the highlight text to the extracted relevant content
+          citation.highlight_text = relevantContent;
+        } else {
+          // For shorter content, we can just use the whole thing
+          citation.highlight_text = citation.content;
+        }
         
         // Store context information for better display
         citation.context_before = textBeforeLink
