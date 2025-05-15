@@ -151,44 +151,83 @@ export function parseAnswer(answer: AskResponse): ParsedAnswer {
         // Check if the citation content is too long (likely the entire document)
         // Important: We need to extract only a relevant portion to highlight
         if (citation.content.length > 300) {
-          // Try to use context from answer to find relevant citation text
-          // Look for some words from before/after the citation in the content
-          let relevantContent = citation.content
+          // Try to find the most relevant section in the content
+          // We'll prioritize content based on keywords from the surrounding text in the answer
           
-          // Extract key phrases from the text around the citation
-          const beforeWords = textBeforeLink.split(/\s+/).slice(-5).join(' ');
-          const afterWords = textAfterLink.split(/\s+/).slice(0, 5).join(' ');
+          // Extract keywords from before/after the citation in the answer
+          const keyWordsFromContext = [
+            ...textBeforeLink.toLowerCase().replace(/[^\w\s]/g, '').split(/\s+/).filter(w => w.length > 4),
+            ...textAfterLink.toLowerCase().replace(/[^\w\s]/g, '').split(/\s+/).filter(w => w.length > 4)
+          ].slice(0, 10); // Take up to 10 keywords
           
-          // Try to find these phrases in the citation content
-          let foundContext = false;
-          if (beforeWords && citation.content.includes(beforeWords)) {
-            const contextStart = citation.content.indexOf(beforeWords);
-            const contextEnd = Math.min(contextStart + 200, citation.content.length);
-            relevantContent = citation.content.substring(contextStart, contextEnd);
-            foundContext = true;
-          } else if (afterWords && citation.content.includes(afterWords)) {
-            const contextEnd = citation.content.indexOf(afterWords) + afterWords.length;
-            const contextStart = Math.max(0, contextEnd - 200);
-            relevantContent = citation.content.substring(contextStart, contextEnd);
-            foundContext = true;
+          // Find paragraphs or sentences in the citation content containing multiple keywords
+          const paragraphs = citation.content.split(/\n\n+/).filter(p => p.trim().length > 0);
+          const sentences = citation.content.match(/[^.!?]+[.!?]+/g) || [];
+          
+          // First try to find a paragraph containing multiple keywords
+          let bestMatch = null;
+          let bestScore = 0;
+          
+          // Try paragraphs first (they're more contextually complete)
+          for (const paragraph of paragraphs) {
+            const paraLower = paragraph.toLowerCase();
+            let score = 0;
+            for (const word of keyWordsFromContext) {
+              if (paraLower.includes(word)) {
+                score++;
+              }
+            }
+            
+            if (score > bestScore) {
+              bestScore = score;
+              bestMatch = paragraph;
+            }
           }
           
-          // If we couldn't find context, use the extraction function
-          if (!foundContext) {
-            const { highlightText } = extractHighlightContext(citation.content, citation.content);
-            relevantContent = highlightText || citation.content.substring(0, Math.min(200, citation.content.length));
+          // If no good paragraph match, try individual sentences
+          if (bestScore < 2 && sentences.length > 0) {
+            for (const sentence of sentences) {
+              const sentLower = sentence.toLowerCase();
+              let score = 0;
+              for (const word of keyWordsFromContext) {
+                if (sentLower.includes(word)) {
+                  score++;
+                }
+              }
+              
+              if (score > bestScore) {
+                bestScore = score;
+                bestMatch = sentence;
+              }
+            }
           }
           
-          // Set the highlight text to the extracted relevant content
-          citation.highlight_text = relevantContent;
+          // If we found a good match, use it
+          if (bestMatch) {
+            citation.highlight_text = bestMatch.trim();
+          } else {
+            // If no good match with keywords, try to extract a section from the beginning
+            // Documents often have important information at the beginning
+            const firstParagraph = paragraphs.length > 0 ? paragraphs[0] : null;
+            const firstSentences = sentences.slice(0, Math.min(3, sentences.length)).join(' ');
+            
+            citation.highlight_text = (firstParagraph && firstParagraph.length < 300) 
+              ? firstParagraph.trim() 
+              : firstSentences.trim();
+          }
+          
+          // Make sure highlight text isn't too long
+          if (citation.highlight_text && citation.highlight_text.length > 300) {
+            citation.highlight_text = citation.highlight_text.substring(0, 297) + '...';
+          }
         } else {
           // For shorter content, we can just use the whole thing
           citation.highlight_text = citation.content;
         }
         
         // Store context information for better display
-        citation.context_before = textBeforeLink
-        citation.context_after = textAfterLink
+        citation.context_before = textBeforeLink;
+        citation.context_after = textAfterLink;
       }
       
       // Replace the citation link with superscript
