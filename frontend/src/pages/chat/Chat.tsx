@@ -811,7 +811,7 @@ const Chat = () => {
       if (!normalizedContent.match(regex)) {
         // If no matches, try to highlight the first sentence
         const sentences = normalizedContent.match(/[^.!?]+[.!?]+/g) || [];
-        if (sentences.length > 0) {
+        if (sentences.length > 0 && sentences[0]) {
           const firstSentence = sentences[0];
           const escapedSentence = firstSentence.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
           const sentenceRegex = new RegExp(`(${escapedSentence})`, 'gi');
