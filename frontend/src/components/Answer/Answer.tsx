@@ -71,10 +71,13 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
   // Scroll to the highlighted text in the citation panel when a citation is activated
   useEffect(() => {
     if (activeCitationId && citationContentRef.current) {
-      const highlightedElement = citationContentRef.current.querySelector(`.${styles.highlightCitation}`)
-      if (highlightedElement) {
-        highlightedElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
-      }
+      // Add a small delay to ensure the citation panel has fully rendered
+      setTimeout(() => {
+        const highlightedElement = citationContentRef.current?.querySelector(`.${styles.highlightCitation}`)
+        if (highlightedElement) {
+          highlightedElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        }
+      }, 200) // 200ms delay should be enough for rendering
     }
   }, [activeCitationId])
 
@@ -471,9 +474,27 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
                   key={idx}
                   onClick={() => {
                     setActiveCitationId(citation.id)
-                    onCitationClicked({ ...citation, active: true })
+                    // Ensure the citation has highlight_text and full_content
+                    const enhancedCitation = { 
+                      ...citation, 
+                      active: true,
+                      highlight_text: citation.highlight_text || citation.content,
+                      full_content: citation.full_content || citation.content
+                    }
+                    onCitationClicked(enhancedCitation)
                   }}
-                  onKeyDown={e => (e.key === 'Enter' || e.key === ' ' ? onCitationClicked(citation) : null)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      // Ensure the citation has highlight_text and full_content
+                      const enhancedCitation = { 
+                        ...citation, 
+                        active: true,
+                        highlight_text: citation.highlight_text || citation.content,
+                        full_content: citation.full_content || citation.content
+                      }
+                      onCitationClicked(enhancedCitation)
+                    }
+                  }}
                   className={isActive ? styles.activeCitationContainer : styles.citationContainer}
                   aria-label={createCitationFilepath(citation, idx)}>
                   <div className={isActive ? styles.activeCitationNumber : styles.citation}>{idx}</div>

@@ -710,6 +710,16 @@ const Chat = () => {
     setActiveCitation(citation);
     setIsCitationPanelOpen(true);
     setIsIntentsPanelOpen(false);
+    
+    // Add a timeout to ensure the citation panel is rendered and then scroll to the highlighted text
+    setTimeout(() => {
+      if (citationContentRef.current) {
+        const highlightedElement = citationContentRef.current.querySelector(`.${styles.highlightCitation}`);
+        if (highlightedElement) {
+          highlightedElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }
+    }, 300); // 300ms delay to ensure panel transition and rendering is complete
   }
 
   const onShowExecResult = (answerId: string) => {
