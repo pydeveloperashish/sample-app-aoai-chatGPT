@@ -252,7 +252,7 @@
   align-self: stretch;
   flex-grow: 0.3;
   max-width: 30%;
-  overflow-y: scroll;
+  overflow-y: auto;
   max-height: calc(100vh - 100px);
 }
 
@@ -288,13 +288,38 @@
   font-size: 16px;
   line-height: 22px;
   color: #323130;
-  margin-top: 12px;
-  margin-bottom: 12px;
+  margin-top: 0;
+  margin-bottom: 8px;
 }
 
-.citationPanelTitle:hover {
+.citationPanelDocTitle {
+  font-weight: 600;
+  font-size: 16px;
+  line-height: 22px;
+  color: #115ea3;
+  margin-bottom: 4px;
   text-decoration: underline;
-  cursor: pointer;
+}
+
+.citationPanelDocInfo {
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 20px;
+  color: #616161;
+  margin-bottom: 16px;
+}
+
+.citationPanelSectionTitle {
+  font-weight: 600;
+  font-size: 15px;
+  line-height: 20px;
+  color: #323130;
+  margin-top: 0;
+  margin-bottom: 8px;
+}
+
+.citationPanelContentWrapper {
+  width: 100%;
 }
 
 .citationPanelContent {
@@ -307,6 +332,14 @@
   order: 1;
   align-self: stretch;
   flex-grow: 0;
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
+  max-height: 100%;
+  overflow-y: auto;
+  padding: 8px;
+  background-color: #fafafa;
+  border-radius: 4px;
+  border: 1px solid #e0e0e0;
 }
 
 .exectResultList {
@@ -402,11 +435,12 @@ a {
   border: 1px solid #e0e0e0;
   border-radius: 8px;
   box-shadow: 0 1px 4px rgba(0,0,0,0.04);
-  padding: 12px 16px;
+  padding: 16px;
   margin-bottom: 12px;
   display: flex;
   align-items: flex-start;
-  gap: 10px;
+  gap: 12px;
+  width: 100%;
 }
 
 .citationCardIcon {
@@ -418,11 +452,14 @@ a {
 
 .highlightCitation {
   background-color: #fff7b2; /* Light yellow background */
-  padding: 1px 2px;
+  padding: 2px;
   border-radius: 2px;
   transition: background-color 0.2s;
+  display: inline;
+  font-weight: 500;
 }
 
 .highlightCitation:hover {
   background-color: #ffeb3b; /* Slightly darker yellow on hover */
+  border-radius: 2px;
 }

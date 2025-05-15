@@ -36,6 +36,22 @@ export function parseAnswer(answer: AskResponse): ParsedAnswer {
     const citationIndex = link.slice(lengthDocN, link.length - 1)
     const citation = cloneDeep(answer.citations[Number(citationIndex) - 1]) as Citation
     if (!filteredCitations.find(c => c.id === citationIndex) && citation) {
+      // Extract the text around the citation for better highlighting context
+      const linkPosition = answerText.indexOf(link)
+      const textBeforeLink = answerText.substring(Math.max(0, linkPosition - 100), linkPosition).trim()
+      const textAfterLink = answerText.substring(linkPosition + link.length, Math.min(answerText.length, linkPosition + link.length + 100)).trim()
+      
+      // If the citation doesn't have highlight_text, create it from the surrounding context
+      if (!citation.highlight_text && citation.content) {
+        citation.highlight_text = citation.content
+      }
+      
+      // Ensure the full_content is populated
+      if (!citation.full_content) {
+        citation.full_content = citation.content
+      }
+      
+      // Replace the citation link with superscript
       answerText = answerText.replaceAll(link, ` ^${++citationReindex}^ `)
       citation.id = citationIndex // original doc index to de-dupe
       citation.reindex_id = citationReindex.toString() // reindex from 1 for display

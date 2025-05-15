@@ -699,9 +699,16 @@ const Chat = () => {
   }, [showLoadingMessage, processMessages])
 
   const onShowCitation = (citation: Citation) => {
-    setActiveCitation(citation)
-    setIsCitationPanelOpen(true)
-    setIsIntentsPanelOpen(false)
+    // Ensure the citation has the full_content and highlight_text properties
+    if (!citation.full_content) {
+      citation.full_content = citation.content;
+    }
+    if (!citation.highlight_text) {
+      citation.highlight_text = citation.content;
+    }
+    setActiveCitation(citation);
+    setIsCitationPanelOpen(true);
+    setIsIntentsPanelOpen(false);
   }
 
   const onShowExecResult = (answerId: string) => {
@@ -755,15 +762,24 @@ const Chat = () => {
     )
   }
 
-  // New function to safely highlight text within HTML content
+  // Improved function to properly highlight text within HTML content
   const highlightTextInContent = (content: string, textToHighlight: string) => {
     if (!textToHighlight || !content) return content;
     
     try {
+      // Normalize text by removing extra whitespace
+      const normalizedContent = content.replace(/\s+/g, ' ').trim();
+      const normalizedHighlight = textToHighlight.replace(/\s+/g, ' ').trim();
+      
       // Escape special regex characters in the text to highlight
-      const escapedText = textToHighlight.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      return content.replace(
-        new RegExp(escapedText, 'gi'),
+      const escapedText = normalizedHighlight.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      
+      // Create a case-insensitive regex to match the text
+      const regex = new RegExp(`(${escapedText})`, 'gi');
+      
+      // Replace all occurrences with highlighted version
+      return normalizedContent.replace(
+        regex,
         match => `<span class="${styles.highlightCitation}">${match}</span>`
       );
     } catch (error) {
@@ -982,18 +998,19 @@ const Chat = () => {
               <div className={styles.citationCard}>
                 <FontIcon iconName="DocumentSearch" className={styles.citationCardIcon} />
                 <div style={{ flex: 1 }}>
-                  <h5
-                    className={styles.citationPanelTitle}
-                    tabIndex={0}
-                    title={
-                      activeCitation.url && !activeCitation.url.includes('blob.core')
-                        ? activeCitation.url
-                        : activeCitation.title ?? ''
-                    }
-                    onClick={() => onViewSource(activeCitation)}>
-                    {activeCitation.title || "Source document"}
+                  <h5 className={styles.citationPanelTitle} tabIndex={0} onClick={() => onViewSource(activeCitation)}>
+                    Source document
                   </h5>
-                  <div tabIndex={0}>
+                  <div className={styles.citationPanelDocTitle}>
+                    {activeCitation.title || "Untitled Document"}
+                  </div>
+                  {activeCitation.page && (
+                    <div className={styles.citationPanelDocInfo}>
+                      page {activeCitation.page}
+                    </div>
+                  )}
+                  <h6 className={styles.citationPanelSectionTitle}>Overview</h6>
+                  <div tabIndex={0} className={styles.citationPanelContentWrapper}>
                     {activeCitation.full_content ? (
                       <ReactMarkdown
                         linkTarget="_blank"

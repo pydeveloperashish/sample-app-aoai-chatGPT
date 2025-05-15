@@ -20,6 +20,7 @@ export type Citation = {
   reindex_id: string | null
   full_content?: string
   highlight_text?: string
+  page?: string | null
 }
 
 export type ToolMessageContent = {

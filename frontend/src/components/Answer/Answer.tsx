@@ -242,19 +242,55 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
       )
     },
     sup({ node, ...props }: { node: any; [key: string]: any }) {
-      // Try to extract citation id from the superscript text
+      // Extract citation id from the superscript text
       const citationText = props.children[0]
       // Find the citation object with this reindex_id
       const citation = parsedAnswer?.citations.find(c => c.reindex_id === citationText)
       const isActive = citation && citation.id === activeCitationId
+      
+      // When clicked, this will highlight the citation in the answer text
+      const handleCitationClick = () => {
+        setActiveCitationId(citation?.id || null)
+        if (citation) {
+          // Make a copy of the citation to avoid modifying the original
+          const enhancedCitation = { ...citation }
+          
+          // Ensure the citation has proper highlight text
+          if (!enhancedCitation.highlight_text) {
+            enhancedCitation.highlight_text = enhancedCitation.content
+          }
+          
+          // If there's no full content, use the content as full content
+          if (!enhancedCitation.full_content) {
+            enhancedCitation.full_content = enhancedCitation.content
+          }
+          
+          // Add page information if not already present
+          if (!enhancedCitation.page && enhancedCitation.metadata) {
+            try {
+              const metadata = JSON.parse(enhancedCitation.metadata)
+              if (metadata.page) {
+                enhancedCitation.page = metadata.page
+              }
+            } catch (e) {
+              // If metadata is not valid JSON, ignore
+            }
+          }
+          
+          // Set a default page number if none exists
+          if (!enhancedCitation.page) {
+            enhancedCitation.page = "1"
+          }
+          
+          onCitationClicked(enhancedCitation)
+        }
+      }
+      
       return (
         <sup
           className={isActive ? styles.highlightCitation : styles.clickableSup}
           style={{ cursor: 'pointer' }}
-          onClick={() => {
-            setActiveCitationId(citation?.id || null)
-            if (citation) onCitationClicked(citation)
-          }}
+          onClick={handleCitationClick}
         >
           {citationText}
         </sup>
