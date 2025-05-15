@@ -22,6 +22,59 @@ export const enumerateCitations = (citations: Citation[]) => {
   return citations
 }
 
+/**
+ * Extracts a focused context around a specific text in a larger content
+ * @param content Full content text
+ * @param textToHighlight The text to find and highlight
+ * @returns An object with the extracted context and highlight positions
+ */
+export function extractHighlightContext(content: string, textToHighlight: string) {
+  if (!content || !textToHighlight) {
+    return { 
+      contextText: content, 
+      highlightText: textToHighlight
+    }
+  }
+
+  // Normalize whitespace in both strings for better matching
+  const normalizedContent = content.replace(/\s+/g, ' ').trim();
+  const normalizedHighlight = textToHighlight.replace(/\s+/g, ' ').trim();
+
+  // Find the position of the highlight text in the content
+  const highlightPos = normalizedContent.toLowerCase().indexOf(normalizedHighlight.toLowerCase());
+  
+  if (highlightPos === -1) {
+    // If exact match not found, try to find a partial match (first 50 chars)
+    const partialHighlight = normalizedHighlight.substring(0, Math.min(50, normalizedHighlight.length));
+    const partialPos = normalizedContent.toLowerCase().indexOf(partialHighlight.toLowerCase());
+    
+    if (partialPos === -1) {
+      // If still no match, just return the original content and highlight
+      return { 
+        contextText: content, 
+        highlightText: textToHighlight
+      }
+    }
+    
+    // Extract the context around the partial match
+    const startPos = Math.max(0, partialPos - 100);
+    const endPos = Math.min(normalizedContent.length, partialPos + partialHighlight.length + 100);
+    return {
+      contextText: normalizedContent.substring(startPos, endPos),
+      highlightText: normalizedContent.substring(partialPos, partialPos + partialHighlight.length)
+    }
+  }
+  
+  // Extract a window of text around the highlight (100 chars before and after)
+  const startPos = Math.max(0, highlightPos - 100);
+  const endPos = Math.min(normalizedContent.length, highlightPos + normalizedHighlight.length + 100);
+  
+  return {
+    contextText: normalizedContent.substring(startPos, endPos),
+    highlightText: normalizedContent.substring(highlightPos, highlightPos + normalizedHighlight.length)
+  }
+}
+
 export function parseAnswer(answer: AskResponse): ParsedAnswer {
   if (typeof answer.answer !== "string") return null
   let answerText = answer.answer
@@ -41,14 +94,22 @@ export function parseAnswer(answer: AskResponse): ParsedAnswer {
       const textBeforeLink = answerText.substring(Math.max(0, linkPosition - 100), linkPosition).trim()
       const textAfterLink = answerText.substring(linkPosition + link.length, Math.min(answerText.length, linkPosition + link.length + 100)).trim()
       
-      // If the citation doesn't have highlight_text, create it from the surrounding context
-      if (!citation.highlight_text && citation.content) {
-        citation.highlight_text = citation.content
-      }
-      
-      // Ensure the full_content is populated
-      if (!citation.full_content) {
-        citation.full_content = citation.content
+      // Process content for better highlighting
+      if (citation.content) {
+        // If the citation doesn't have highlight_text or full_content, set them properly
+        if (!citation.full_content) {
+          citation.full_content = citation.content
+        }
+        
+        // Extract a more precise highlight context
+        const { contextText, highlightText } = extractHighlightContext(citation.content, citation.content)
+        
+        // Use the extracted highlight text, or fall back to the original content
+        citation.highlight_text = highlightText || citation.content
+        
+        // Store context information for better display
+        citation.context_before = textBeforeLink
+        citation.context_after = textAfterLink
       }
       
       // Replace the citation link with superscript

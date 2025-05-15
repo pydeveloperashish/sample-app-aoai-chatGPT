@@ -21,6 +21,9 @@ export type Citation = {
   full_content?: string
   highlight_text?: string
   page?: string | null
+  context_before?: string
+  context_after?: string
+  active?: boolean
 }
 
 export type ToolMessageContent = {

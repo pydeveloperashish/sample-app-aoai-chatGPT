@@ -66,6 +66,7 @@ const Chat = () => {
   const [errorMsg, setErrorMsg] = useState<ErrorMessage | null>()
   const [logo, setLogo] = useState('')
   const [answerId, setAnswerId] = useState<string>('')
+  const citationContentRef = useRef<HTMLDivElement | null>(null)
 
   const errorDialogContentProps = {
     type: DialogType.close,
@@ -1010,7 +1011,7 @@ const Chat = () => {
                     </div>
                   )}
                   <h6 className={styles.citationPanelSectionTitle}>Overview</h6>
-                  <div tabIndex={0} className={styles.citationPanelContentWrapper}>
+                  <div tabIndex={0} className={styles.citationPanelContentWrapper} ref={citationContentRef}>
                     {activeCitation.full_content ? (
                       <ReactMarkdown
                         linkTarget="_blank"

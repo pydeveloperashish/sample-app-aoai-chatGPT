@@ -1,8 +1,8 @@
-import { FormEvent, useContext, useEffect, useMemo, useState } from 'react'
+import { FormEvent, useContext, useEffect, useMemo, useState, useRef } from 'react'
 import ReactMarkdown from 'react-markdown'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { nord } from 'react-syntax-highlighter/dist/esm/styles/prism'
-import { Checkbox, DefaultButton, Dialog, FontIcon, Stack, Text } from '@fluentui/react'
+import { Checkbox, DefaultButton, Dialog, FontIcon, Stack, Text, TooltipHost } from '@fluentui/react'
 import { useBoolean } from '@fluentui/react-hooks'
 import { ThumbDislike20Filled, ThumbLike20Filled } from '@fluentui/react-icons'
 import DOMPurify from 'dompurify'
@@ -45,6 +45,7 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
     appStateContext?.state.frontendSettings?.feedback_enabled && appStateContext?.state.isCosmosDBAvailable?.cosmosDB
   const SANITIZE_ANSWER = appStateContext?.state.frontendSettings?.sanitize_answer
   const [activeCitationId, setActiveCitationId] = useState<string | null>(null)
+  const citationContentRef = useRef<HTMLDivElement>(null)
 
   const handleChevronClick = () => {
     setChevronIsExpanded(!chevronIsExpanded)
@@ -66,6 +67,16 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
     }
     setFeedbackState(currentFeedbackState)
   }, [appStateContext?.state.feedbackState, feedbackState, answer.message_id])
+
+  // Scroll to the highlighted text in the citation panel when a citation is activated
+  useEffect(() => {
+    if (activeCitationId && citationContentRef.current) {
+      const highlightedElement = citationContentRef.current.querySelector(`.${styles.highlightCitation}`)
+      if (highlightedElement) {
+        highlightedElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }
+    }
+  }, [activeCitationId])
 
   const createCitationFilepath = (citation: Citation, index: number, truncate: boolean = false) => {
     let citationFilename = ''
@@ -150,6 +161,32 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
     setIsFeedbackDialogOpen(false)
     setShowReportInappropriateFeedback(false)
     setNegativeFeedbackList([])
+  }
+
+  // Improved function to properly highlight text within HTML content
+  const highlightTextInContent = (content: string, textToHighlight: string) => {
+    if (!textToHighlight || !content) return content;
+    
+    try {
+      // Normalize text by removing extra whitespace
+      const normalizedContent = content.replace(/\s+/g, ' ').trim();
+      const normalizedHighlight = textToHighlight.replace(/\s+/g, ' ').trim();
+      
+      // Escape special regex characters in the text to highlight
+      const escapedText = normalizedHighlight.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      
+      // Create a case-insensitive regex to match the text
+      const regex = new RegExp(`(${escapedText})`, 'gi');
+      
+      // Replace all occurrences with highlighted version
+      return normalizedContent.replace(
+        regex,
+        match => `<span class="${styles.highlightCitation}">${match}</span>`
+      );
+    } catch (error) {
+      console.error('Error highlighting text:', error);
+      return content;
+    }
   }
 
   const UnhelpfulFeedbackContent = () => {
@@ -252,8 +289,8 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
       const handleCitationClick = () => {
         setActiveCitationId(citation?.id || null)
         if (citation) {
-          // Make a copy of the citation to avoid modifying the original
-          const enhancedCitation = { ...citation }
+          // Mark this citation as active
+          const enhancedCitation = { ...citation, active: true }
           
           // Ensure the citation has proper highlight text
           if (!enhancedCitation.highlight_text) {
@@ -286,17 +323,33 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
         }
       }
       
+      // Create a tooltip with a preview of the citation content
+      const tooltipContent = citation?.highlight_text 
+        ? <div className={styles.citationTooltip}>{citation.highlight_text.substring(0, 150)}{citation.highlight_text.length > 150 ? '...' : ''}</div>
+        : <div className={styles.citationTooltip}>Click to view citation</div>
+      
       return (
-        <sup
-          className={isActive ? styles.highlightCitation : styles.clickableSup}
-          style={{ cursor: 'pointer' }}
-          onClick={handleCitationClick}
+        <TooltipHost
+          content={tooltipContent}
+          delay={1}
+          id={`citation-tooltip-${citation?.id}`}
+          calloutProps={{ gapSpace: 0 }}
         >
-          {citationText}
-        </sup>
+          <sup
+            className={isActive ? styles.activeCitation : styles.clickableSup}
+            style={{ cursor: 'pointer' }}
+            onClick={handleCitationClick}
+            role="button"
+            aria-label={`Citation ${citationText}`}
+            tabIndex={0}
+          >
+            {citationText}
+          </sup>
+        </TooltipHost>
       )
     }
   }
+  
   return (
     <>
       <Stack className={styles.answerContainer} tabIndex={0}>
@@ -409,17 +462,21 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
         {chevronIsExpanded && (
           <div className={styles.citationWrapper}>
             {parsedAnswer?.citations.map((citation, idx) => {
+              const isActive = citation.id === activeCitationId;
               return (
                 <span
                   title={createCitationFilepath(citation, ++idx)}
                   tabIndex={0}
                   role="link"
                   key={idx}
-                  onClick={() => onCitationClicked(citation)}
+                  onClick={() => {
+                    setActiveCitationId(citation.id)
+                    onCitationClicked({ ...citation, active: true })
+                  }}
                   onKeyDown={e => (e.key === 'Enter' || e.key === ' ' ? onCitationClicked(citation) : null)}
-                  className={styles.citationContainer}
+                  className={isActive ? styles.activeCitationContainer : styles.citationContainer}
                   aria-label={createCitationFilepath(citation, idx)}>
-                  <div className={styles.citation}>{idx}</div>
+                  <div className={isActive ? styles.activeCitationNumber : styles.citation}>{idx}</div>
                   {createCitationFilepath(citation, idx, true)}
                 </span>
               )

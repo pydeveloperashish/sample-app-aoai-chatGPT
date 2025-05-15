@@ -254,10 +254,15 @@
   max-width: 30%;
   overflow-y: auto;
   max-height: calc(100vh - 100px);
+  position: relative;
+  transition: width 0.3s ease-in-out;
 }
 
 .citationPanelHeaderContainer {
   width: 100%;
+  border-bottom: 1px solid #e0e0e0;
+  padding-bottom: 8px;
+  margin-bottom: 8px;
 }
 
 .citationPanelHeader {
@@ -290,6 +295,12 @@
   color: #323130;
   margin-top: 0;
   margin-bottom: 8px;
+  cursor: pointer;
+}
+
+.citationPanelTitle:hover {
+  color: #115ea3;
+  text-decoration: underline;
 }
 
 .citationPanelDocTitle {
@@ -320,6 +331,7 @@
 
 .citationPanelContentWrapper {
   width: 100%;
+  position: relative;
 }
 
 .citationPanelContent {
@@ -457,6 +469,15 @@ a {
   transition: background-color 0.2s;
   display: inline;
   font-weight: 500;
+  box-shadow: 0 0 5px rgba(253, 216, 53, 0.5);
+  border: 1px solid rgba(253, 216, 53, 0.5);
+  animation: pulse 2s ease-in-out 1;
+}
+
+@keyframes pulse {
+  0% { background-color: #fff7b2; }
+  50% { background-color: #ffeb3b; }
+  100% { background-color: #fff7b2; }
 }
 
 .highlightCitation:hover {
