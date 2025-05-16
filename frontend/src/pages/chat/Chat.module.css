@@ -456,7 +456,7 @@
 }
 
 .citationPanelContentWrapper::before {
-  content: """;
+  content: "\201C"; /* Unicode for left double quotation mark */
   position: absolute;
   top: -15px;
   left: 10px;
