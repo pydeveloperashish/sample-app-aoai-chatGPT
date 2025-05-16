@@ -5,24 +5,31 @@
   --highlight-color: rgba(255, 235, 59, 0.5);
   --text-color: #242424;
   --text-color-secondary: #616161;
-  --background-primary: #ffffff;
-  --background-secondary: #f5f5f5;
-  --background-tertiary: #eef6fe;
-  --border-color: #e0e0e0;
-  --shadow-color: rgba(0, 0, 0, 0.12);
+  --background-primary: #f8f9fa;
+  --background-secondary: #f0f2f5;
+  --background-tertiary: #e6eef7;
+  --border-color: #e0e5ec;
+  --shadow-color: rgba(0, 0, 0, 0.08);
+  --card-bg: #f8f9fc;
+  --input-bg: #f5f7fa;
+  --hover-bg: #edf2f7;
 }
 
 :root.dark-mode {
-  --primary-color: #3b8fd4;
-  --primary-color-dark: #2b79b9;
+  --primary-color: #60a5fa;
+  --primary-color-dark: #3b82f6;
   --highlight-color: rgba(255, 200, 0, 0.3);
-  --text-color: #e0e0e0;
-  --text-color-secondary: #a0a0a0;
-  --background-primary: #1e1e2e;
-  --background-secondary: #252536;
-  --background-tertiary: #2a2a3c;
-  --border-color: #3f3f5c;
+  --text-color: #e2e8f0;
+  --text-color-secondary: #a1aebf;
+  --background-primary: #151826;
+  --background-secondary: #1e2235;
+  --background-tertiary: #252a41;
+  --border-color: #384161;
   --shadow-color: rgba(0, 0, 0, 0.35);
+  --card-bg: #1a1d2d;
+  --input-bg: #1c1f31;
+  --hover-bg: #2d3348;
+  --background-overlay: rgba(0, 0, 0, 0.4);
 }
 
 .container {
@@ -117,7 +124,7 @@
   position: relative;
   display: flex;
   padding: 20px;
-  background: var(--background-tertiary);
+  background: var(--card-bg, #f8f9fc);
   border-radius: 8px;
   box-shadow:
     0px 2px 4px rgba(0, 0, 0, 0.14),
@@ -271,10 +278,10 @@
   align-items: flex-start;
   padding: 20px;
   gap: 10px;
-  background: var(--background-primary);
+  background: var(--card-bg, #f8f9fc);
   box-shadow:
-    0px 4px 12px rgba(0, 0, 0, 0.15),
-    0px 2px 4px rgba(0, 0, 0, 0.18);
+    0px 4px 12px rgba(0, 0, 0, 0.08),
+    0px 2px 4px rgba(0, 0, 0, 0.12);
   border-radius: 10px;
   border: 1px solid var(--border-color);
   flex: auto;
@@ -289,6 +296,19 @@
   color: var(--text-color);
 }
 
+.citationPanel::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23000000' fill-opacity='0.02' fill-rule='evenodd'%3E%3Ccircle cx='3' cy='3' r='1'/%3E%3C/g%3E%3C/svg%3E");
+  pointer-events: none;
+  opacity: 0.5;
+  z-index: 0;
+}
+
 .citationPanelHeaderContainer {
   width: 100%;
   border-bottom: 2px solid var(--primary-color-dark);
@@ -297,7 +317,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: linear-gradient(to bottom, var(--background-primary), var(--background-tertiary));
+  background: linear-gradient(to bottom, var(--card-bg, #f8f9fc), var(--background-tertiary));
+  z-index: 1;
 }
 
 .citationPanelHeader {
@@ -347,6 +368,26 @@
 }
 
 .citationPanelDocTitle {
+  font-style: normal;
+  font-weight: 700;
+  font-size: 22px;
+  line-height: 28px;
+  color: var(--primary-color);
+  margin: 0 0 16px 0;
+  padding: 14px 18px;
+  background-color: var(--background-tertiary);
+  background-image: linear-gradient(to right, var(--background-tertiary), var(--background-tertiary), var(--background-tertiary), rgba(59, 143, 212, 0.08));
+  border-radius: 10px;
+  border-left: 6px solid var(--primary-color);
+  box-shadow: 0 3px 6px rgba(0,0,0,0.12);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  cursor: default;
+  letter-spacing: 0.2px;
+  text-transform: capitalize;
+  display: flex;
+  align-items: center;
   z-index: 1;
 }
 
@@ -354,6 +395,8 @@
   content: "📑";
   margin-right: 10px;
   font-size: 20px;
+  position: relative;
+  z-index: 2;
 }
 
 .citationPanelDocTitle::after {
@@ -364,7 +407,7 @@
   width: 300%;
   height: 300%;
   background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, transparent 70%);
-  z-index: 2;
+  z-index: 1;
   opacity: 0;
   transition: opacity 0.5s ease;
   transform: scale(0.8);
@@ -404,7 +447,7 @@
   font-weight: 500;
   padding: 6px 14px;
   margin-bottom: 16px;
-  background-color: var(--background-tertiary);
+  background-color: var(--input-bg, #f5f7fa);
   border: 1px solid var(--primary-color-dark);
   border-radius: 6px;
   color: var(--primary-color);
@@ -451,7 +494,7 @@
   border: 1px solid var(--border-color);
   border-radius: 8px;
   margin-top: 12px;
-  background-color: var(--background-secondary);
+  background-color: var(--input-bg, #f5f7fa);
   box-shadow: inset 0 1px 3px rgba(0,0,0,0.08);
 }
 
@@ -668,8 +711,8 @@ a {
 }
 
 .citationCard {
-  background: #f8fafc;
-  border: 1px solid #e0e0e0;
+  background: var(--card-bg, #f8f9fc);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   box-shadow: 0 1px 4px rgba(0,0,0,0.04);
   padding: 16px;
@@ -730,17 +773,18 @@ a {
 
 /* Fix the chat container in dark mode */
 :global(.dark-mode) .chatContainer {
-  background: radial-gradient(108.78% 108.78% at 50.02% 19.78%, var(--background-primary) 57.29%, var(--background-tertiary) 100%);
+  background: radial-gradient(108.78% 108.78% at 50.02% 19.78%, var(--background-primary), var(--background-secondary));
 }
 
 /* Improve document section styles for dark mode */
 :global(.dark-mode) .citationPanelDocTitle {
-  background-color: rgba(17, 94, 163, 0.15);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  background-color: var(--background-tertiary);
+  background-image: linear-gradient(to right, var(--background-tertiary), var(--background-tertiary), var(--background-tertiary), rgba(59, 143, 212, 0.15));
+  border-left: 6px solid var(--primary-color);
 }
 
 :global(.dark-mode) .citationPanelContentWrapper {
-  background-color: var(--background-secondary);
+  background-color: var(--input-bg);
   border-color: var(--border-color);
 }
 
@@ -761,8 +805,8 @@ a {
 
 /* Improve the document info display in dark mode */
 :global(.dark-mode) .citationPanelDocInfo {
-  background-color: rgba(59, 143, 212, 0.15);
-  border-color: rgba(59, 143, 212, 0.3);
+  background-color: var(--background-tertiary);
+  border-color: var(--primary-color);
 }
 
 /* Add styling for the chat root background in dark mode */
@@ -772,9 +816,8 @@ a {
 
 /* Make the message content look better in dark mode */
 :global(.dark-mode) .chatMessageUserMessage {
-  background-color: var(--background-tertiary);
-  color: var(--text-color);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  background-color: var(--card-bg);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
 }
 
 /* Style the message from GPT in dark mode */
@@ -855,6 +898,8 @@ a {
 :global(.dark-mode) body,
 :global(.dark-mode) html {
   background-color: var(--background-primary);
+  background-image: url("data:image/svg+xml,%3Csvg width='30' height='30' viewBox='0 0 30 30' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%233b3b5c' fill-opacity='0.07' fill-rule='evenodd'%3E%3Cpath d='M0 0h30v30H0z'/%3E%3C/g%3E%3C/svg%3E");
+  background-attachment: fixed;
 }
 
 :global(.dark-mode) .layout {
@@ -864,102 +909,6 @@ a {
 :global(.dark-mode) .header {
   background-color: var(--background-secondary);
   border-bottom: 1px solid var(--border-color);
-}
-
-.citationPanelDocTitle {
-  font-style: normal;
-  font-weight: 700;
-  font-size: 22px;
-  line-height: 28px;
-  color: var(--primary-color);
-  margin: 0 0 16px 0;
-  padding: 14px 18px;
-  background-color: var(--background-tertiary);
-  border-radius: 10px;
-  border-left: 6px solid var(--primary-color);
-  box-shadow: 0 3px 6px rgba(0,0,0,0.12);
-  position: relative;
-  overflow: hidden;
-  transition: all 0.3s ease;
-  cursor: default;
-  letter-spacing: 0.2px;
-  text-transform: capitalize;
-  display: flex;
-  align-items: center;
-  z-index: 1;
-}
-
-.citationPanelDocTitle::before {
-  content: "📑";
-  margin-right: 10px;
-  font-size: 20px;
-  position: relative;
-  z-index: 2;
-}
-
-.citationPanelDocTitle::after {
-  content: '';
-  position: absolute;
-  top: -100%;
-  left: -100%;
-  width: 300%;
-  height: 300%;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, transparent 70%);
-  z-index: 1;
-  opacity: 0;
-  transition: opacity 0.5s ease;
-  transform: scale(0.8);
-  pointer-events: none;
-}
-
-/* Add background gradient to document title */
-.citationPanelDocTitle {
-  background-image: linear-gradient(to right, var(--background-tertiary), var(--background-tertiary), var(--background-tertiary), rgba(59, 143, 212, 0.08));
-}
-
-/* Fix dark mode styling for chat and document elements */
-:global(.dark-mode) .chatContainer {
-  background: radial-gradient(108.78% 108.78% at 50.02% 19.78%, #1a1a2e 57.29%, #141428 100%);
-}
-
-:global(.dark-mode) .chatMessageUserMessage {
-  background-color: #2a2a42;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
-}
-
-:global(.dark-mode) .citationPanel {
-  background-color: #1e1e2e;
-  border-color: #3f3f5c;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-}
-
-:global(.dark-mode) .citationPanelDocTitle {
-  background-color: #252540;
-  background-image: linear-gradient(to right, #252540, #252540, #252540, rgba(59, 143, 212, 0.15));
-  border-left: 6px solid #3b8fd4;
-}
-
-:global(.dark-mode) .citationPanelContentWrapper {
-  background-color: #252536;
-  border-color: #3f3f5c;
-}
-
-:global(.dark-mode) .citationPanelDocInfo {
-  background-color: #252540;
-  border-color: #3b8fd4;
-}
-
-:global(.dark-mode) .citationPanelContent {
-  color: #e0e0e0;
-}
-
-/* Enhance the section title in dark mode */
-:global(.dark-mode) .citationPanelSectionTitle {
-  color: #3b8fd4;
-}
-
-:global(.dark-mode) .citationPanelSectionTitle::after {
-  background: linear-gradient(to right, #3b8fd4, transparent);
 }
 
 /* Add beautiful scrollbars to the document panel */
@@ -1004,4 +953,93 @@ a {
 
 .citationPanelTitle {
   animation: pulse 2s infinite;
+}
+
+/* Style the input area */
+.chatInput input,
+.chatInput textarea {
+  background-color: var(--input-bg, #f5f7fa);
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+  border-radius: 6px;
+  padding: 8px 12px;
+  transition: all 0.2s ease;
+}
+
+.chatInput input:focus,
+.chatInput textarea:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(59, 143, 212, 0.1);
+  background-color: var(--background-primary);
+}
+
+/* Enhance buttons with new colors */
+button {
+  background-color: var(--input-bg, #f5f7fa);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 6px 12px;
+  transition: all 0.2s ease;
+}
+
+button:hover {
+  background-color: var(--hover-bg, #edf2f7);
+}
+
+:global(.dark-mode) button {
+  background-color: var(--input-bg, #1c1f31);
+  border-color: var(--border-color);
+}
+
+:global(.dark-mode) button:hover {
+  background-color: var(--hover-bg, #2d3348);
+}
+
+/* Add subtle transition to all elements */
+* {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Add frosted glass effect to the citation panel in dark mode */
+:global(.dark-mode) .citationPanel {
+  background-color: rgba(26, 29, 45, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(56, 65, 97, 0.5);
+}
+
+:global(.dark-mode) .citationPanelHeaderContainer {
+  background: linear-gradient(to bottom, rgba(30, 34, 53, 0.7), rgba(37, 42, 65, 0.7));
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+
+/* Add subtle animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.citationPanel {
+  animation: fadeIn 0.4s ease-out;
+}
+
+/* Add hover effect to citation card */
+.citationCard {
+  transition: all 0.3s ease;
+}
+
+.citationCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+}
+
+:global(.dark-mode) .citationCard:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+/* Add glow effect to highlight in dark mode */
+:global(.dark-mode) .highlightCitation {
+  box-shadow: 0 0 8px rgba(255, 200, 0, 0.3);
 }
