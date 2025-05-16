@@ -6,6 +6,12 @@
 
 .header {
   background-color: #f2f2f2;
+  padding: 10px 0;
+}
+
+:global(.dark-mode) .header {
+  background-color: var(--background-secondary, #1e2235);
+  border-bottom: 1px solid var(--border-color, #384161);
 }
 
 .headerContainer {
@@ -31,6 +37,10 @@
   color: #242424;
 }
 
+:global(.dark-mode) .headerTitle {
+  color: var(--text-color, #e2e8f0);
+}
+
 .headerIcon {
   height: 32px;
   width: auto;
@@ -41,7 +51,10 @@
   display: flex;
   flex-direction: row;
   justify-content: center;
+  align-items: center;
   margin-right: 20px;
+  height: 40px;
+  gap: 8px;
 }
 
 .shareButton {
@@ -68,6 +81,12 @@
   border-radius: 4px;
 }
 
+:global(.dark-mode) .urlTextBox {
+  background-color: var(--input-bg, #1c1f31);
+  color: var(--text-color, #e2e8f0);
+  border-color: var(--border-color, #384161);
+}
+
 .copyButtonContainer {
   box-sizing: border-box;
   display: flex;
@@ -81,13 +100,26 @@
   border-radius: 4px;
 }
 
+:global(.dark-mode) .copyButtonContainer {
+  background-color: var(--input-bg, #1c1f31);
+  border-color: var(--border-color, #384161);
+}
+
 .copyButtonContainer:hover {
   cursor: pointer;
   background: #d1d1d1;
 }
 
+:global(.dark-mode) .copyButtonContainer:hover {
+  background-color: var(--hover-bg, #2d3348);
+}
+
 .copyButton {
   color: #424242;
+}
+
+:global(.dark-mode) .copyButton {
+  color: var(--text-color-secondary, #a1aebf);
 }
 
 .copyButtonText {
@@ -98,6 +130,10 @@
   display: flex;
   align-items: center;
   color: #242424;
+}
+
+:global(.dark-mode) .copyButtonText {
+  color: var(--text-color, #e2e8f0);
 }
 
 @media (max-width: 480px) {

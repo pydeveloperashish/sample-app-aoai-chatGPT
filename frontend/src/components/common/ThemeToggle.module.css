@@ -1,20 +1,22 @@
 .themeToggle {
-  position: fixed;
-  top: 15px;
-  right: 90px;
-  z-index: 1000;
+  position: relative;
+  top: auto;
+  right: auto;
+  z-index: 10;
   background-color: transparent;
   border: none;
   cursor: pointer;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
+  min-width: 32px;
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
   padding: 0;
   color: var(--text-color, #242424);
+  margin: 0;
 }
 
 .themeToggle:hover {
@@ -26,7 +28,7 @@
 }
 
 .themeIcon {
-  font-size: 20px;
+  font-size: 16px;
   color: inherit;
 }
 
