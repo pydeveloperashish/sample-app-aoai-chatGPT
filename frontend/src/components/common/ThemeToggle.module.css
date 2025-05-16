@@ -1,0 +1,45 @@
+.themeToggle {
+  position: fixed;
+  top: 15px;
+  right: 90px;
+  z-index: 1000;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  padding: 0;
+  color: var(--text-color, #242424);
+}
+
+.themeToggle:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+:global(.dark-mode) .themeToggle:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.themeIcon {
+  font-size: 20px;
+  color: inherit;
+}
+
+:global(.dark-mode) .themeIcon {
+  color: #ffb700;
+}
+
+/* Animation when switching themes */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.themeToggle:active .themeIcon {
+  animation: spin 0.5s ease-in-out;
+} 

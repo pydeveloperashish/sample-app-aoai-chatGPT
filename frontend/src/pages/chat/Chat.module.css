@@ -1,8 +1,36 @@
+/* Root container with dark mode support */
+:root {
+  --primary-color: #115EA3;
+  --primary-color-dark: #0e4d84;
+  --highlight-color: rgba(255, 235, 59, 0.5);
+  --text-color: #242424;
+  --text-color-secondary: #616161;
+  --background-primary: #ffffff;
+  --background-secondary: #f5f5f5;
+  --background-tertiary: #eef6fe;
+  --border-color: #e0e0e0;
+  --shadow-color: rgba(0, 0, 0, 0.12);
+}
+
+:root.dark-mode {
+  --primary-color: #3b8fd4;
+  --primary-color-dark: #2b79b9;
+  --highlight-color: rgba(255, 200, 0, 0.3);
+  --text-color: #e0e0e0;
+  --text-color-secondary: #a0a0a0;
+  --background-primary: #1e1e2e;
+  --background-secondary: #252536;
+  --background-tertiary: #2a2a3c;
+  --border-color: #3f3f5c;
+  --shadow-color: rgba(0, 0, 0, 0.35);
+}
+
 .container {
   flex: 1;
   display: flex;
   flex-direction: column;
   gap: 20px;
+  background-color: var(--background-secondary);
 }
 
 .chatRoot {
@@ -20,13 +48,14 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  background: radial-gradient(108.78% 108.78% at 50.02% 19.78%, #ffffff 57.29%, #eef6fe 100%);
+  background: radial-gradient(108.78% 108.78% at 50.02% 19.78%, var(--background-primary) 57.29%, var(--background-tertiary) 100%);
   box-shadow:
     0px 2px 4px rgba(0, 0, 0, 0.14),
-    0px 0px 2px rgba(0, 0, 0, 0.12);
+    0px 0px 2px var(--shadow-color);
   border-radius: 8px;
   overflow-y: auto;
   max-height: calc(100vh - 100px);
+  color: var(--text-color);
 }
 
 .chatEmptyState {
@@ -58,7 +87,7 @@
   align-items: flex-end;
   text-align: center;
   letter-spacing: -0.01em;
-  color: #616161;
+  color: var(--text-color-secondary);
 }
 
 .chatIcon {
@@ -88,16 +117,16 @@
   position: relative;
   display: flex;
   padding: 20px;
-  background: #edf5fd;
+  background: var(--background-tertiary);
   border-radius: 8px;
   box-shadow:
     0px 2px 4px rgba(0, 0, 0, 0.14),
-    0px 0px 2px rgba(0, 0, 0, 0.12);
+    0px 0px 2px var(--shadow-color);
   font-style: normal;
   font-weight: 400;
   font-size: 14px;
   line-height: 22px;
-  color: #242424;
+  color: var(--text-color);
   order: 0;
   flex-grow: 0;
   white-space: pre-wrap;
@@ -242,12 +271,12 @@
   align-items: flex-start;
   padding: 20px;
   gap: 10px;
-  background: #ffffff;
+  background: var(--background-primary);
   box-shadow:
-    0px 4px 12px rgba(0, 0, 0, 0.08),
-    0px 2px 4px rgba(0, 0, 0, 0.12);
+    0px 4px 12px rgba(0, 0, 0, 0.15),
+    0px 2px 4px rgba(0, 0, 0, 0.18);
   border-radius: 10px;
-  border: 1px solid #e8f0fe;
+  border: 1px solid var(--border-color);
   flex: auto;
   order: 0;
   align-self: stretch;
@@ -257,17 +286,18 @@
   max-height: calc(100vh - 100px);
   position: relative;
   transition: all 0.3s ease-in-out;
+  color: var(--text-color);
 }
 
 .citationPanelHeaderContainer {
   width: 100%;
-  border-bottom: 2px solid #c7e0f4;
+  border-bottom: 2px solid var(--primary-color-dark);
   padding-bottom: 12px;
   margin-bottom: 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: linear-gradient(to bottom, #ffffff, #f5faff);
+  background: linear-gradient(to bottom, var(--background-primary), var(--background-tertiary));
 }
 
 .citationPanelHeader {
@@ -275,21 +305,21 @@
   font-weight: 700;
   font-size: 22px;
   line-height: 28px;
-  color: #115EA3;
+  color: var(--primary-color);
   flex: none;
   order: 0;
   flex-grow: 0;
-  text-shadow: 0px 1px 1px rgba(0,0,0,0.05);
+  text-shadow: 0px 1px 1px rgba(0,0,0,0.1);
 }
 
 .citationPanelDismiss {
   width: 18px;
   height: 18px;
-  color: #424242;
+  color: var(--text-color-secondary);
 }
 
 .citationPanelDismiss:hover {
-  background-color: #d1d1d1;
+  background-color: var(--border-color);
   cursor: pointer;
 }
 
@@ -298,7 +328,7 @@
   font-weight: 600;
   font-size: 14px;
   line-height: 20px;
-  color: #115EA3;
+  color: var(--primary-color);
   margin-top: 12px;
   margin-bottom: 6px;
   cursor: pointer;
@@ -313,13 +343,70 @@
   font-weight: 700;
   font-size: 20px;
   line-height: 26px;
-  color: #115EA3;
-  margin-bottom: 8px;
-  padding: 6px 10px;
-  background-color: #f0f7ff;
-  border-radius: 6px;
-  border-left: 4px solid #115EA3;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  color: var(--primary-color);
+  margin-bottom: 12px;
+  padding: 12px 14px;
+  background-color: var(--background-tertiary);
+  border-radius: 8px;
+  border-left: 5px solid var(--primary-color);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  cursor: default;
+}
+
+.citationPanelDocTitle::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to right, rgba(59, 143, 212, 0.1), rgba(59, 143, 212, 0));
+  z-index: 1;
+  transition: opacity 0.3s ease;
+}
+
+.citationPanelDocTitle::after {
+  content: '';
+  position: absolute;
+  top: -100%;
+  left: -100%;
+  width: 300%;
+  height: 300%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, transparent 70%);
+  z-index: 2;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  transform: scale(0.8);
+  pointer-events: none;
+}
+
+.citationPanelDocTitle:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.citationPanelDocTitle:hover::after {
+  opacity: 0.8;
+  animation: shine 2s infinite ease-in-out;
+}
+
+@keyframes shine {
+  0% {
+    top: -100%;
+    left: -100%;
+    opacity: 0;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    top: 100%;
+    left: 100%;
+    opacity: 0;
+  }
 }
 
 .citationPanelDocInfo {
@@ -327,27 +414,27 @@
   font-weight: 500;
   font-size: 14px;
   line-height: 20px;
-  color: #115EA3;
+  color: var(--primary-color);
   display: inline-block;
-  margin-bottom: 12px;
-  background-color: #edf5fd;
-  padding: 6px 12px;
-  border-radius: 4px;
-  border: 1px solid #c7e0f4;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  margin-bottom: 16px;
+  background-color: var(--background-tertiary);
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--primary-color-dark);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
   position: relative;
-  top: -4px;
+  top: -6px;
 }
 
 .citationPanelSectionTitle {
   font-weight: 700;
   font-size: 16px;
   line-height: 22px;
-  color: #323130;
-  margin-top: 4px;
-  margin-bottom: 12px;
-  padding-bottom: 6px;
-  border-bottom: 2px solid #eaeaea;
+  color: var(--text-color);
+  margin-top: 6px;
+  margin-bottom: 14px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--border-color);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -356,12 +443,12 @@
   max-height: 500px;
   overflow-y: auto;
   padding: 16px;
-  border: 1px solid #e0e8f5;
-  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
   margin-top: 12px;
-  background-color: #fcfdff;
+  background-color: var(--background-secondary);
   position: relative;
-  box-shadow: inset 0 1px 3px rgba(0,0,0,0.03);
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.08);
 }
 
 .citationPanelContent {
@@ -369,7 +456,92 @@
   line-height: 1.6;
   white-space: pre-wrap;
   word-break: break-word;
-  color: #333333;
+  color: var(--text-color);
+  padding: 10px;
+}
+
+/* Add styling for paragraphs within citation content */
+.citationPanelContent p {
+  margin-bottom: 12px;
+}
+
+/* Add styling for headings within citation content */
+.citationPanelContent h1,
+.citationPanelContent h2,
+.citationPanelContent h3,
+.citationPanelContent h4,
+.citationPanelContent h5,
+.citationPanelContent h6 {
+  margin-top: 16px;
+  margin-bottom: 8px;
+  color: var(--primary-color);
+}
+
+/* Add styling for links within citation content */
+.citationPanelContent a {
+  color: var(--primary-color);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s ease;
+}
+
+.citationPanelContent a:hover {
+  border-bottom-color: var(--primary-color);
+}
+
+/* Add styling for lists within citation content */
+.citationPanelContent ul,
+.citationPanelContent ol {
+  margin-bottom: 16px;
+  padding-left: 24px;
+}
+
+.citationPanelContent li {
+  margin-bottom: 4px;
+}
+
+/* Add styling for blockquotes within citation content */
+.citationPanelContent blockquote {
+  border-left: 3px solid var(--primary-color);
+  padding-left: 16px;
+  margin-left: 0;
+  color: var(--text-color-secondary);
+  font-style: italic;
+}
+
+/* Add styling for code within citation content */
+.citationPanelContent code {
+  background-color: var(--background-tertiary);
+  padding: 2px 4px;
+  border-radius: 4px;
+  font-size: 0.9em;
+}
+
+/* Add styling for pre blocks within citation content */
+.citationPanelContent pre {
+  background-color: var(--background-tertiary);
+  padding: 12px;
+  border-radius: 6px;
+  overflow-x: auto;
+  margin-bottom: 16px;
+}
+
+/* Add styling for tables within citation content */
+.citationPanelContent table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 16px;
+}
+
+.citationPanelContent th,
+.citationPanelContent td {
+  border: 1px solid var(--border-color);
+  padding: 8px;
+  text-align: left;
+}
+
+.citationPanelContent th {
+  background-color: var(--background-tertiary);
 }
 
 .exectResultList {
@@ -481,18 +653,34 @@ a {
 }
 
 .highlightCitation {
-  background-color: rgba(255, 235, 59, 0.5);
+  background-color: var(--highlight-color);
   padding: 3px 5px;
-  border-radius: 3px;
+  border-radius: 4px;
   animation: pulseHighlight 1.5s ease-in-out;
   display: inline;
   font-weight: 500;
   border-bottom: 2px solid rgba(244, 191, 0, 0.7);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
 @keyframes pulseHighlight {
-  0% { background-color: rgba(255, 235, 59, 0.2); }
-  50% { background-color: rgba(255, 235, 59, 0.7); }
-  100% { background-color: rgba(255, 235, 59, 0.5); }
+  0% { background-color: rgba(255, 235, 59, 0.1); }
+  50% { background-color: rgba(255, 235, 59, 0.5); }
+  100% { background-color: var(--highlight-color); }
+}
+
+/* Apply dark mode based on user preference */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --primary-color: #3b8fd4;
+    --primary-color-dark: #2b79b9;
+    --highlight-color: rgba(255, 200, 0, 0.3);
+    --text-color: #e0e0e0;
+    --text-color-secondary: #a0a0a0;
+    --background-primary: #1e1e2e;
+    --background-secondary: #252536;
+    --background-tertiary: #2a2a3c;
+    --border-color: #3f3f5c;
+    --shadow-color: rgba(0, 0, 0, 0.35);
+  }
 }
