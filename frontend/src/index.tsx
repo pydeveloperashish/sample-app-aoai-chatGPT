@@ -1,11 +1,8 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import { Provider } from 'react-redux'
-import { createBrowserRouter, RouterProvider } from 'react-router-dom'
+import { HashRouter, Route, Routes } from 'react-router-dom'
 import { initializeIcons } from '@fluentui/react'
 
-import { store } from './state/store'
-import { routes } from './pages/routes'
 import Chat from './pages/chat/Chat'
 import Layout from './pages/layout/Layout'
 import NoPage from './pages/NoPage'
@@ -28,7 +25,7 @@ if (isDarkMode) {
 }
 
 // Add theme toggle function to window for global access
-window.toggleTheme = () => {
+(window as any).toggleTheme = () => {
   const isDark = document.documentElement.classList.contains('dark-mode');
   if (isDark) {
     document.documentElement.classList.remove('dark-mode');
@@ -39,15 +36,17 @@ window.toggleTheme = () => {
   }
 };
 
-// Create the router
-const router = createBrowserRouter(routes)
-
 export default function App() {
   return (
     <AppStateProvider>
-      <Provider store={store}>
-        <RouterProvider router={router} />
-      </Provider>
+      <HashRouter>
+        <Routes>
+          <Route path="/" element={<Layout />}>
+            <Route index element={<Chat />} />
+            <Route path="*" element={<NoPage />} />
+          </Route>
+        </Routes>
+      </HashRouter>
     </AppStateProvider>
   )
 }
