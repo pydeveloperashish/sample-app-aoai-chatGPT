@@ -707,6 +707,52 @@ const Chat = () => {
     if (!citation.highlight_text) {
       citation.highlight_text = citation.content;
     }
+
+    // Process metadata to extract title and page information if not already present
+    if (citation.metadata && (!citation.title || !citation.page)) {
+      try {
+        const metadata = JSON.parse(citation.metadata);
+        
+        // Get title from metadata if available
+        if (metadata.title && !citation.title) {
+          citation.title = metadata.title;
+        }
+        
+        // Get page information
+        if (metadata.page && !citation.page) {
+          citation.page = metadata.page;
+        }
+      } catch (e) {
+        console.error('Error parsing citation metadata:', e);
+      }
+    }
+    
+    // If we still don't have a title, try to extract it from filepath or content
+    if (!citation.title) {
+      if (citation.filepath) {
+        // Extract filename from filepath
+        const filepathParts = citation.filepath.split(/[/\\]/);
+        const filename = filepathParts[filepathParts.length - 1];
+        
+        // Remove file extension if present and use as title
+        citation.title = filename ? filename.replace(/\.\w+$/, '') : "Document";
+      } else {
+        // Try to extract title from first line of content
+        const firstLine = citation.content.split('\n')[0].trim();
+        if (firstLine && firstLine.length > 5 && firstLine.length < 100) {
+          citation.title = firstLine;
+        } else {
+          citation.title = "Document";
+        }
+      }
+    }
+    
+    // Ensure page information is present
+    if (!citation.page) {
+      citation.page = "1";
+    }
+    
+    // Update the citation with our enhanced data
     setActiveCitation(citation);
     setIsCitationPanelOpen(true);
     setIsIntentsPanelOpen(false);
@@ -1082,11 +1128,11 @@ const Chat = () => {
                     Source document
                   </h5>
                   <div className={styles.citationPanelDocTitle}>
-                    {activeCitation.title || "Untitled Document"}
+                    {activeCitation.title || "Document"}
                   </div>
                   {activeCitation.page && (
                     <div className={styles.citationPanelDocInfo}>
-                      page {activeCitation.page}
+                      Page {activeCitation.page}
                     </div>
                   )}
                   <h6 className={styles.citationPanelSectionTitle}>Overview</h6>

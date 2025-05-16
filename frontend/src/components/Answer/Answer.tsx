@@ -305,21 +305,55 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
             enhancedCitation.full_content = enhancedCitation.content
           }
           
-          // Add page information if not already present
-          if (!enhancedCitation.page && enhancedCitation.metadata) {
+          // Extract metadata including title and page information
+          if (enhancedCitation.metadata) {
             try {
               const metadata = JSON.parse(enhancedCitation.metadata)
+              
+              // Extract page information
               if (metadata.page) {
                 enhancedCitation.page = metadata.page
               }
+              
+              // Extract title information, if available
+              if (metadata.title && !enhancedCitation.title) {
+                enhancedCitation.title = metadata.title
+              }
+              
+              // If filepath exists and no title, use the filename as title
+              if (!enhancedCitation.title && enhancedCitation.filepath) {
+                const filepathParts = enhancedCitation.filepath.split(/[/\\]/)
+                const filename = filepathParts[filepathParts.length - 1]
+                if (filename) {
+                  // Remove file extension if present
+                  enhancedCitation.title = filename.replace(/\.\w+$/, '')
+                }
+              }
             } catch (e) {
-              // If metadata is not valid JSON, ignore
+              console.error('Error parsing citation metadata:', e)
             }
           }
           
           // Set a default page number if none exists
           if (!enhancedCitation.page) {
             enhancedCitation.page = "1"
+          }
+          
+          // If we still don't have a title, try to extract it from filepath or use a default
+          if (!enhancedCitation.title) {
+            if (enhancedCitation.filepath) {
+              const filepathParts = enhancedCitation.filepath.split(/[/\\]/)
+              const filename = filepathParts[filepathParts.length - 1]
+              enhancedCitation.title = filename || "Document"
+            } else {
+              // Try to extract a meaningful title from the first line of content
+              const firstLine = enhancedCitation.content.split('\n')[0].trim()
+              if (firstLine && firstLine.length > 5 && firstLine.length < 100) {
+                enhancedCitation.title = firstLine
+              } else {
+                enhancedCitation.title = "Document " + citationText
+              }
+            }
           }
           
           onCitationClicked(enhancedCitation)
