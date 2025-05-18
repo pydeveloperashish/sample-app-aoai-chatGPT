@@ -21,18 +21,19 @@
   --highlight-color: rgba(255, 220, 0, 0.4);
   --text-color: #5aa0ff;
   --text-color-secondary: #5aa0ff;
-  --background-primary: #1a1b2e;
-  --background-secondary: #1a1b2e;
-  --background-tertiary: #1a1b2e;
+  --background-primary: #181a1b;
+  --background-secondary: #181a1b;
+  --background-tertiary: #1e2021;
   --border-color: #394176;
   --shadow-color: rgba(0, 0, 0, 0.4);
-  --card-bg: #1a1b2e;
-  --input-bg: #1a1b2e;
+  --card-bg: #181a1b;
+  --input-bg: #1e2021;
   --hover-bg: #2d304d;
   --background-overlay: rgba(0, 0, 0, 0.4);
-  --citation-header-bg: #28293d;
-  --citation-panel-bg: #212338;
-  --citation-content-bg: #252842;
+  --citation-header-bg: #1e2021;
+  --citation-panel-bg: #181a1b;
+  --citation-content-bg: #1e2021;
+  --text-color-white: #ffffff;
 }
 
 .container {
@@ -1029,12 +1030,19 @@ a {
 /* Style the input area */
 .chatInput input,
 .chatInput textarea {
-  background-color: var(--input-bg, #f5f7fa);
+  background-color: var(--input-bg);
   border: 1px solid var(--border-color);
   color: var(--text-color);
   border-radius: 6px;
   padding: 8px 12px;
   transition: all 0.2s ease;
+}
+
+:global(.dark-mode) .chatInput input,
+:global(.dark-mode) .chatInput textarea {
+  background-color: #000000;
+  color: #ffffff;
+  border-color: #394176;
 }
 
 .chatInput input:focus,
@@ -1044,9 +1052,16 @@ a {
   background-color: var(--background-primary);
 }
 
-/* Enhance buttons with new colors */
+:global(.dark-mode) .chatInput input:focus,
+:global(.dark-mode) .chatInput textarea:focus {
+  background-color: #000000;
+  color: #ffffff;
+  border-color: var(--primary-color);
+}
+
+/* Button styling */
 button {
-  background-color: var(--input-bg, #f5f7fa);
+  background-color: var(--input-bg);
   color: var(--text-color);
   border: 1px solid var(--border-color);
   border-radius: 4px;
@@ -1055,16 +1070,17 @@ button {
 }
 
 button:hover {
-  background-color: var(--hover-bg, #edf2f7);
+  background-color: var(--hover-bg);
 }
 
 :global(.dark-mode) button {
-  background-color: var(--input-bg, #1c1f31);
-  border-color: var(--border-color);
+  background-color: #000000;
+  color: #ffffff;
+  border-color: #394176;
 }
 
 :global(.dark-mode) button:hover {
-  background-color: var(--hover-bg, #2d3348);
+  background-color: #1e2021;
 }
 
 /* Add subtle transition to all elements */
@@ -1114,7 +1130,7 @@ button:hover {
 /* Improve paragraph text in dark mode */
 :global(.dark-mode) .citationPanelContent p,
 :global(.dark-mode) .citationPanelContent li {
-  color: #f0f0f0;
+  color: #ffffff;
   text-shadow: 0 0 0.5px rgba(255, 255, 255, 0.1);
 }
 
@@ -1130,17 +1146,17 @@ button:hover {
 
 /* Make content text more visible */
 :global(.dark-mode) .citationPanelContent {
-  color: #a3c2ff;
+  color: #ffffff;
   text-shadow: 0 0 0.5px rgba(255, 255, 255, 0.1);
-  font-weight: 600;
-  font-size: 17px;
-  line-height: 1.7;
+  font-weight: 400;
+  font-size: 15px;
+  line-height: 1.6;
 }
 
 /* Make paragraph and list text more visible */
 :global(.dark-mode) .citationPanelContent p,
 :global(.dark-mode) .citationPanelContent li {
-  color: #a3c2ff;
+  color: #ffffff;
   text-shadow: 0 0 0.5px rgba(255, 255, 255, 0.1);
   margin-bottom: 16px;
 }
@@ -1158,7 +1174,7 @@ button:hover {
 
 /* Make the code stand out better with higher contrast */
 :global(.dark-mode) .citationPanelContent code {
-  background-color: #1a1b2e;
+  background-color: #000000;
   color: #ffb86c;
   border: 1px solid #394176;
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5);
@@ -1360,4 +1376,508 @@ button:hover {
 /* Adjust content styling for perfect match */
 :global(.dark-mode) .citationPanelContent {
   padding: 5px 10px 5px 10px;
+}
+
+/* Chat input styling */
+.chatInput input,
+.chatInput textarea {
+  background-color: var(--input-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+  border-radius: 6px;
+  padding: 8px 12px;
+  transition: all 0.2s ease;
+}
+
+:global(.dark-mode) .chatInput input,
+:global(.dark-mode) .chatInput textarea {
+  background-color: #000000;
+  color: #ffffff;
+  border-color: #394176;
+}
+
+.chatInput input:focus,
+.chatInput textarea:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(59, 143, 212, 0.1);
+  background-color: var(--background-primary);
+}
+
+:global(.dark-mode) .chatInput input:focus,
+:global(.dark-mode) .chatInput textarea:focus {
+  background-color: #000000;
+  color: #ffffff;
+  border-color: var(--primary-color);
+}
+
+/* Button styling */
+button {
+  background-color: var(--input-bg);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 6px 12px;
+  transition: all 0.2s ease;
+}
+
+button:hover {
+  background-color: var(--hover-bg);
+}
+
+:global(.dark-mode) button {
+  background-color: #000000;
+  color: #ffffff;
+  border-color: #394176;
+}
+
+:global(.dark-mode) button:hover {
+  background-color: #1e2021;
+}
+
+/* User message styling */
+:global(.dark-mode) .chatMessageUserMessage {
+  background-color: #181a1b;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+/* Make content text more visible */
+:global(.dark-mode) .citationPanelContent {
+  color: #ffffff;
+  text-shadow: 0 0 0.5px rgba(255, 255, 255, 0.1);
+  font-weight: 400;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+/* Make paragraph and list text more visible */
+:global(.dark-mode) .citationPanelContent p,
+:global(.dark-mode) .citationPanelContent li {
+  color: #ffffff;
+  text-shadow: 0 0 0.5px rgba(255, 255, 255, 0.1);
+  margin-bottom: 16px;
+}
+
+/* Update citation panel background */
+:global(.dark-mode) .citationPanel {
+  background-color: #181a1b;
+  border: none;
+  box-shadow: none;
+}
+
+:global(.dark-mode) .citationPanelContentWrapper {
+  background-color: #181a1b;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  margin-top: 5px;
+}
+
+/* Main chat container */
+:global(.dark-mode) .chatContainer {
+  background: #181a1b;
+}
+
+/* Code styling in citation panel */
+:global(.dark-mode) .citationPanelContent code {
+  background-color: #000000;
+  color: #ffb86c;
+  border: 1px solid #394176;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5);
+}
+
+/* Query input area */
+:global(.dark-mode) .chatInput {
+  background-color: #181a1b;
+}
+
+/* Chat text input */
+:global(.dark-mode) #queryInput,
+:global(.dark-mode) .queryInput {
+  background-color: #000000;
+  color: #ffffff;
+  border-color: #394176;
+}
+
+/* Send button */
+:global(.dark-mode) .sendButton {
+  background-color: #000000;
+  color: #ffffff;
+}
+
+/* Ask your question placeholder */
+:global(.dark-mode) input::placeholder,
+:global(.dark-mode) textarea::placeholder {
+  color: #888888;
+}
+
+/* Update citation card styling */
+.citationCard {
+  background: var(--card-bg, #f8f9fc);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  padding: 16px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+}
+
+:global(.dark-mode) .citationCard {
+  background-color: #181a1b;
+  border-color: #394176;
+}
+
+/* Update the chat area background */
+:global(.dark-mode) .chatContainer {
+  background: #181a1b;
+  color: #ffffff;
+}
+
+/* Update the document content area */
+:global(.dark-mode) .citationPanelContentWrapper {
+  background-color: #181a1b;
+  border: none;
+  box-shadow: none;
+}
+
+/* Style the input query box specifically */
+:global(.dark-mode) #queryInput,
+:global(.dark-mode) .queryInput {
+  background-color: #000000;
+  color: #ffffff;
+  border-color: #394176;
+}
+
+/* Style the send button */
+:global(.dark-mode) .sendButton {
+  background-color: #000000;
+  color: #ffffff;
+}
+
+/* Add a pure black background to the main chat interface elements */
+:global(.dark-mode) .chatRoot {
+  background-color: #181a1b;
+}
+
+:global(.dark-mode) .container {
+  background-color: #181a1b;
+}
+
+/* Fix any dialog or popup backgrounds */
+:global(.dark-mode) .dialog,
+:global(.dark-mode) .modal,
+:global(.dark-mode) .popup {
+  background-color: #000000;
+  color: #ffffff;
+  border-color: #394176;
+}
+
+/* Update the search icon color if present */
+:global(.dark-mode) .searchIcon {
+  color: #ffffff;
+}
+
+/* Add styling for the input placeholder */
+:global(.dark-mode) input::placeholder,
+:global(.dark-mode) textarea::placeholder {
+  color: #888888;
+}
+
+/* Add a pure black background to the main chat interface elements */
+:global(.dark-mode) .chatRoot {
+  background-color: #181a1b;
+}
+
+:global(.dark-mode) .container {
+  background-color: #181a1b;
+}
+
+/* Fix any dialog or popup backgrounds */
+:global(.dark-mode) .dialog,
+:global(.dark-mode) .modal,
+:global(.dark-mode) .popup {
+  background-color: #000000;
+  color: #ffffff;
+  border-color: #394176;
+}
+
+/* Update the search icon color if present */
+:global(.dark-mode) .searchIcon {
+  color: #ffffff;
+}
+
+/* Update the text input fields */
+:global(.dark-mode) input[type="text"],
+:global(.dark-mode) input[type="search"],
+:global(.dark-mode) input[type="email"],
+:global(.dark-mode) input[type="password"],
+:global(.dark-mode) textarea,
+:global(.dark-mode) select {
+  background-color: #000000;
+  color: #ffffff;
+  border-color: #394176;
+}
+
+/* Fix the white text in "tell me about amot valve" query field */
+:global(.dark-mode) #queryInput,
+:global(.dark-mode) .queryInput {
+  background-color: #000000;
+  color: #ffffff;
+  border-color: #394176;
+}
+
+/* Update any remaining white background elements */
+:global(.dark-mode) .chatMessageGpt {
+  color: #ffffff;
+}
+
+/* Fix the "AI-generated content may be incorrect" text */
+:global(.dark-mode) .disclaimer,
+:global(.dark-mode) .warning {
+  color: #888888;
+}
+
+/* For the "ask your question" input at the bottom */
+:global(.dark-mode) .askQuestionContainer,
+:global(.dark-mode) .askQuestionInput {
+  background-color: #000000;
+  color: #ffffff;
+}
+
+/* Ensure headers and buttons are properly styled */
+:global(.dark-mode) h1,
+:global(.dark-mode) h2,
+:global(.dark-mode) h3,
+:global(.dark-mode) h4,
+:global(.dark-mode) h5,
+:global(.dark-mode) h6,
+:global(.dark-mode) button,
+:global(.dark-mode) .btn,
+:global(.dark-mode) .button {
+  color: #ffffff;
+}
+
+/* Add specific styles for the "Ask your question..." input box in the chat footer */
+:global(.dark-mode) .askYourQuestion,
+:global(.dark-mode) [placeholder="Ask your question..."] {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+  border-color: #394176 !important;
+}
+
+/* Add specific styles for the send button */
+:global(.dark-mode) .sendButton,
+:global(.dark-mode) button[type="submit"] {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+  border-color: #394176 !important;
+}
+
+/* Target the "tell me about amot valve" search box */
+:global(.dark-mode) input[type="text"],
+:global(.dark-mode) input[type="search"],
+:global(.dark-mode) textarea {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+  border-color: #394176 !important;
+}
+
+/* Style all white background areas to be black with white text */
+:global(.dark-mode) .inputArea,
+:global(.dark-mode) .searchBar,
+:global(.dark-mode) .queryBox {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+/* Make sure the chat input textarea has black background */
+:global(.dark-mode) #queryInput,
+:global(.dark-mode) .queryInput,
+:global(.dark-mode) textarea#message,
+:global(.dark-mode) textarea.message {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+  border-color: #394176 !important;
+}
+
+/* Add specific targeting for the message input */
+:global(.dark-mode) [role="textbox"],
+:global(.dark-mode) [contenteditable="true"] {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+/* Ensure buttons and icons have proper contrasting colors */
+:global(.dark-mode) svg,
+:global(.dark-mode) .icon {
+  color: #ffffff !important;
+}
+
+/* Make sure all dialog boxes are black */
+:global(.dark-mode) [role="dialog"],
+:global(.dark-mode) .modal,
+:global(.dark-mode) .popup {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+/* Style the search box at the top specifically */
+:global(.dark-mode) input[type="search"],
+:global(.dark-mode) .searchQuery,
+:global(.dark-mode) input.searchBox,
+:global(.dark-mode) .searchInput {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+  border-color: #394176 !important;
+}
+
+/* Ensure main container backgrounds are correct */
+:global(.dark-mode) body,
+:global(.dark-mode) html,
+:global(.dark-mode) #root,
+:global(.dark-mode) .app {
+  background-color: #181a1b !important;
+  color: #ffffff !important;
+}
+
+/* Force any remaining white backgrounds to be black */
+:global(.dark-mode) input,
+:global(.dark-mode) select,
+:global(.dark-mode) textarea,
+:global(.dark-mode) button,
+:global(.dark-mode) .input,
+:global(.dark-mode) .textbox,
+:global(.dark-mode) [type="text"],
+:global(.dark-mode) [type="search"],
+:global(.dark-mode) [type="email"],
+:global(.dark-mode) [type="password"] {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+/* Specifically style the "tell me about amot valve" query box at the top */
+:global(.dark-mode) .top-search-box,
+:global(.dark-mode) .query-input-container input,
+:global(.dark-mode) .header-search,
+:global(.dark-mode) .main-search-box {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+/* Target the input field inside chat interface */
+:global(.dark-mode) .chatInput input,
+:global(.dark-mode) .chatInput textarea {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+  border-color: #394176 !important;
+}
+
+/* Style dropdown and select elements */
+:global(.dark-mode) select,
+:global(.dark-mode) option,
+:global(.dark-mode) .dropdown,
+:global(.dark-mode) .dropdown-menu {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+/* Style any footer elements */
+:global(.dark-mode) footer,
+:global(.dark-mode) .footer {
+  background-color: #181a1b !important;
+  color: #ffffff !important;
+}
+
+/* Target the main search box shown in the screenshot at the top */
+:global(.dark-mode) [placeholder="tell me about amot valve"],
+:global(.dark-mode) .ms-TextField-field,
+:global(.dark-mode) .ms-TextField-fieldGroup,
+:global(.dark-mode) .ms-SearchBox-field,
+:global(.dark-mode) .ms-SearchBox,
+:global(.dark-mode) .searchField {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+  border-color: #394176 !important;
+}
+
+/* Target the chat input box at the bottom with "Ask your question..." */
+:global(.dark-mode) [placeholder="Ask your question..."],
+:global(.dark-mode) .chat-input,
+:global(.dark-mode) .user-input,
+:global(.dark-mode) .message-input,
+:global(.dark-mode) .chat-text-area {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+  border-color: #394176 !important;
+}
+
+/* Target any navigation bars or menus */
+:global(.dark-mode) nav,
+:global(.dark-mode) .nav,
+:global(.dark-mode) .navbar,
+:global(.dark-mode) .navigation,
+:global(.dark-mode) header,
+:global(.dark-mode) .header {
+  background-color: #181a1b !important;
+  color: #ffffff !important;
+}
+
+/* Target any cards or containers that might be white */
+:global(.dark-mode) .card,
+:global(.dark-mode) .container,
+:global(.dark-mode) .panel,
+:global(.dark-mode) .box,
+:global(.dark-mode) section,
+:global(.dark-mode) article,
+:global(.dark-mode) aside {
+  background-color: #181a1b !important;
+  color: #ffffff !important;
+}
+
+/* Target inputs with specific names that might match the search field */
+:global(.dark-mode) input[name="query"],
+:global(.dark-mode) input[name="search"],
+:global(.dark-mode) input[name="q"],
+:global(.dark-mode) input[id="search"],
+:global(.dark-mode) input[id="query"],
+:global(.dark-mode) input[id="q"] {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+  border-color: #394176 !important;
+}
+
+/* Style the "X" button visible in the screenshot to clear search */
+:global(.dark-mode) .clear-button,
+:global(.dark-mode) .clear-search,
+:global(.dark-mode) .clear-input,
+:global(.dark-mode) .close-button,
+:global(.dark-mode) .ms-Button--icon,
+:global(.dark-mode) button.ms-SearchBox-clearButton {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+/* Force very specific styling for React-based MaterialUI components */
+:global(.dark-mode) .MuiInputBase-root,
+:global(.dark-mode) .MuiOutlinedInput-root,
+:global(.dark-mode) .MuiInput-root,
+:global(.dark-mode) .MuiTextField-root input,
+:global(.dark-mode) .MuiSelect-root,
+:global(.dark-mode) .MuiAutocomplete-input {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+  border-color: #394176 !important;
+}
+
+/* Target any white backgrounds in the main chat window */
+:global(.dark-mode) .main,
+:global(.dark-mode) main,
+:global(.dark-mode) .content,
+:global(.dark-mode) .chat-window,
+:global(.dark-mode) .message-container {
+  background-color: #181a1b !important;
+  color: #ffffff !important;
 }
