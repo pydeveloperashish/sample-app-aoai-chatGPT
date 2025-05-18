@@ -108,8 +108,22 @@
 
 .chatMessageUser {
   display: flex;
-  justify-content: flex-end;
+  flex-direction: column;
+  align-items: flex-end;
   margin-bottom: 12px;
+  position: relative;
+}
+
+.chatMessageUser::before {
+  content: "YOU";
+  display: block;
+  font-size: 12px;
+  font-weight: bold;
+  color: #5aa0ff;
+  margin-bottom: 5px;
+  padding: 2px 8px;
+  background-color: rgba(90, 160, 255, 0.1);
+  border-radius: 4px;
 }
 
 .chatMessageUserMessage {
@@ -131,13 +145,44 @@
   white-space: pre-wrap;
   word-wrap: break-word;
   max-width: 80%;
+  border: 3px solid #5aa0ff;
 }
 
 .chatMessageGpt {
   margin-bottom: 12px;
   max-width: 80%;
   display: flex;
+  flex-direction: column;
   color: #ffffff !important;
+  position: relative;
+}
+
+.chatMessageGpt::before {
+  content: "AI";
+  display: block;
+  font-size: 12px;
+  font-weight: bold;
+  color: #394176;
+  margin-bottom: 5px;
+  padding: 2px 8px;
+  background-color: rgba(57, 65, 118, 0.2);
+  border-radius: 4px;
+  align-self: flex-start;
+}
+
+.chatMessageGptContent {
+  background-color: #0a1929;
+  padding: 15px;
+  border-radius: 8px;
+  border: 3px solid #394176;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  color: #ffffff;
+  font-style: normal;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 22px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
 }
 
 .chatMessageError {
@@ -847,22 +892,33 @@ html {
   animation: pulse 2s infinite;
 }
 
-/* Style the input area */
+/* Chat input styling */
 .chatInput input,
-.chatInput textarea {
-  background-color: var(--input-bg);
-  border: 1px solid var(--border-color);
-  color: var(--text-color);
-  border-radius: 6px;
-  padding: 8px 12px;
-  transition: all 0.2s ease;
+.chatInput textarea,
+[placeholder="Ask your question..."],
+.chat-input,
+.user-input,
+.message-input,
+.chat-text-area {
+  background-color: #112240 !important;
+  border: 2px solid #5aa0ff !important;
+  color: #ffffff !important;
+  border-radius: 8px !important;
+  padding: 12px 16px !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3) !important;
 }
 
 .chatInput input:focus,
-.chatInput textarea:focus {
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 2px rgba(59, 143, 212, 0.1);
-  background-color: var(--background-primary);
+.chatInput textarea:focus,
+[placeholder="Ask your question..."]:focus,
+.chat-input:focus,
+.user-input:focus,
+.message-input:focus,
+.chat-text-area:focus {
+  border-color: #7cb3ff !important;
+  box-shadow: 0 0 0 3px rgba(90, 160, 255, 0.3) !important;
+  background-color: #15294b !important;
 }
 
 /* Button styling */
@@ -1144,20 +1200,31 @@ button:hover {
 
 /* Chat input styling */
 .chatInput input,
-.chatInput textarea {
-  background-color: var(--input-bg);
-  border: 1px solid var(--border-color);
-  color: var(--text-color);
-  border-radius: 6px;
-  padding: 8px 12px;
-  transition: all 0.2s ease;
+.chatInput textarea,
+[placeholder="Ask your question..."],
+.chat-input,
+.user-input,
+.message-input,
+.chat-text-area {
+  background-color: #112240 !important;
+  border: 2px solid #5aa0ff !important;
+  color: #ffffff !important;
+  border-radius: 8px !important;
+  padding: 12px 16px !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3) !important;
 }
 
 .chatInput input:focus,
-.chatInput textarea:focus {
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 2px rgba(59, 143, 212, 0.1);
-  background-color: var(--background-primary);
+.chatInput textarea:focus,
+[placeholder="Ask your question..."]:focus,
+.chat-input:focus,
+.user-input:focus,
+.message-input:focus,
+.chat-text-area:focus {
+  border-color: #7cb3ff !important;
+  box-shadow: 0 0 0 3px rgba(90, 160, 255, 0.3) !important;
+  background-color: #15294b !important;
 }
 
 /* User message styling */

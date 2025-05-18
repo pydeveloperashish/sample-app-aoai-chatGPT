@@ -104,11 +104,13 @@ const Layout = () => {
               selectors: {
                 ['@media (min-width: 480px)']: {
                   maxWidth: '600px',
-                  background: '#FFFFFF',
+                  background: '#0a1929',
+                  color: '#ffffff',
                   boxShadow: '0px 14px 28.8px rgba(0, 0, 0, 0.24), 0px 0px 8px rgba(0, 0, 0, 0.2)',
                   borderRadius: '8px',
                   maxHeight: '200px',
-                  minHeight: '100px'
+                  minHeight: '100px',
+                  border: '2px solid #394176'
                 }
               }
             }
@@ -116,7 +118,11 @@ const Layout = () => {
         }}
         dialogContentProps={{
           title: 'Share the web app',
-          showCloseButton: true
+          showCloseButton: true,
+          styles: {
+            title: { color: '#ffffff' },
+            subText: { color: '#cccccc' }
+          }
         }}>
         <Stack horizontal verticalAlign="center" style={{ gap: '8px' }}>
           <TextField className={styles.urlTextBox} defaultValue={window.location.href} readOnly />
