@@ -16,20 +16,23 @@
 }
 
 :root.dark-mode {
-  --primary-color: #60a5fa;
-  --primary-color-dark: #3b82f6;
-  --highlight-color: rgba(255, 200, 0, 0.3);
-  --text-color: #e2e8f0;
-  --text-color-secondary: #a1aebf;
-  --background-primary: #151826;
-  --background-secondary: #1e2235;
-  --background-tertiary: #252a41;
-  --border-color: #384161;
-  --shadow-color: rgba(0, 0, 0, 0.35);
-  --card-bg: #1a1d2d;
-  --input-bg: #1c1f31;
-  --hover-bg: #2d3348;
+  --primary-color: #5aa0ff;
+  --primary-color-dark: #4a90ff;
+  --highlight-color: rgba(255, 220, 0, 0.4);
+  --text-color: #5aa0ff;
+  --text-color-secondary: #5aa0ff;
+  --background-primary: #1a1b2e;
+  --background-secondary: #1a1b2e;
+  --background-tertiary: #1a1b2e;
+  --border-color: #394176;
+  --shadow-color: rgba(0, 0, 0, 0.4);
+  --card-bg: #1a1b2e;
+  --input-bg: #1a1b2e;
+  --hover-bg: #2d304d;
   --background-overlay: rgba(0, 0, 0, 0.4);
+  --citation-header-bg: #28293d;
+  --citation-panel-bg: #212338;
+  --citation-content-bg: #252842;
 }
 
 .container {
@@ -490,7 +493,7 @@
   position: relative;
   max-height: 500px;
   overflow-y: auto;
-  padding: 24px;
+  padding: 24px 28px;
   border: 1px solid var(--border-color);
   border-radius: 8px;
   margin-top: 14px;
@@ -828,10 +831,10 @@ a {
 
 /* Improve the document panel in dark mode */
 :global(.dark-mode) .citationPanel {
-  background-color: var(--background-primary);
-  border-color: var(--border-color);
+  background-color: var(--citation-panel-bg);
+  border-color: #394176;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
   color: var(--text-color);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
 /* Fix the chat container in dark mode */
@@ -841,14 +844,14 @@ a {
 
 /* Improve document section styles for dark mode */
 :global(.dark-mode) .citationPanelDocTitle {
-  background-color: var(--background-tertiary);
-  background-image: linear-gradient(to right, var(--background-tertiary), var(--background-tertiary), var(--background-tertiary), rgba(59, 143, 212, 0.15));
-  border-left: 6px solid var(--primary-color);
+  background-color: #1a1b2e;
+  color: #7cb3ff;
+  border-left-color: #5a9eff;
 }
 
 :global(.dark-mode) .citationPanelContentWrapper {
-  background-color: var(--input-bg);
-  border-color: var(--border-color);
+  background-color: var(--citation-content-bg);
+  border-color: #394176;
 }
 
 /* Enhance the shine effect for document title in dark mode */
@@ -862,14 +865,15 @@ a {
 
 /* Style the overview title for dark mode */
 :global(.dark-mode) .citationPanelSectionTitle {
-  color: var(--primary-color);
+  color: #7cb3ff;
   border-bottom-color: var(--border-color);
 }
 
 /* Improve the document info display in dark mode */
 :global(.dark-mode) .citationPanelDocInfo {
-  background-color: var(--background-tertiary);
-  border-color: var(--primary-color);
+  background-color: #1a1b2e;
+  color: #7cb3ff;
+  border-color: #394176;
 }
 
 /* Add styling for the chat root background in dark mode */
@@ -897,13 +901,11 @@ a {
 
 /* Enhance the highlight citation in dark mode */
 :global(.dark-mode) .highlightCitation {
-  background-color: rgba(255, 220, 0, 0.4);
-  border-bottom: 2px solid rgba(255, 220, 0, 0.6);
+  background-color: rgba(255, 220, 0, 0.25);
+  border-bottom: 2px solid rgba(255, 220, 0, 0.4);
   color: #ffffff;
   font-weight: 700;
-  box-shadow: 0 0 10px rgba(255, 220, 0, 0.3);
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5);
-  padding: 2px 6px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 /* Style inputs in dark mode */
@@ -1079,9 +1081,10 @@ button:hover {
 }
 
 :global(.dark-mode) .citationPanelHeaderContainer {
-  background: linear-gradient(to bottom, rgba(30, 34, 53, 0.7), rgba(37, 42, 65, 0.7));
-  backdrop-filter: blur(5px);
-  -webkit-backdrop-filter: blur(5px);
+  background: transparent;
+  border-bottom: 1px solid #394176;
+  padding-bottom: 6px;
+  margin-bottom: 20px;
 }
 
 /* Add subtle animations */
@@ -1123,4 +1126,238 @@ button:hover {
 
 :global(.dark-mode) .citationPanelContent h2 {
   border-bottom: 1px solid rgba(59, 143, 212, 0.3);
+}
+
+/* Make content text more visible */
+:global(.dark-mode) .citationPanelContent {
+  color: #a3c2ff;
+  text-shadow: 0 0 0.5px rgba(255, 255, 255, 0.1);
+  font-weight: 600;
+  font-size: 17px;
+  line-height: 1.7;
+}
+
+/* Make paragraph and list text more visible */
+:global(.dark-mode) .citationPanelContent p,
+:global(.dark-mode) .citationPanelContent li {
+  color: #a3c2ff;
+  text-shadow: 0 0 0.5px rgba(255, 255, 255, 0.1);
+  margin-bottom: 16px;
+}
+
+/* Make headings stand out */
+:global(.dark-mode) .citationPanelContent h1,
+:global(.dark-mode) .citationPanelContent h2,
+:global(.dark-mode) .citationPanelContent h3,
+:global(.dark-mode) .citationPanelContent h4,
+:global(.dark-mode) .citationPanelContent h5,
+:global(.dark-mode) .citationPanelContent h6 {
+  color: #7cb3ff;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+}
+
+/* Make the code stand out better with higher contrast */
+:global(.dark-mode) .citationPanelContent code {
+  background-color: #1a1b2e;
+  color: #ffb86c;
+  border: 1px solid #394176;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5);
+}
+
+/* Make links more visible */
+:global(.dark-mode) .citationPanelContent a {
+  color: #7cb3ff;
+  font-weight: 600;
+}
+
+:global(.dark-mode) .citationPanelContent a:hover {
+  background-color: rgba(124, 179, 255, 0.1);
+}
+
+/* Improve OVERVIEW section title */
+.citationPanelHeader {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--primary-color);
+  letter-spacing: 1.5px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  text-transform: uppercase;
+}
+
+:global(.dark-mode) .citationPanelHeader {
+  color: #5aa0ff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  font-size: 26px;
+  letter-spacing: 0px;
+  text-transform: none;
+  font-weight: 600;
+  margin: 0;
+  padding: 0;
+}
+
+/* Match Page 1 text color */
+:global(.dark-mode) .citationPanelDocInfo {
+  background-color: #272a3f;
+  color: #5aa0ff;
+  border: none;
+  font-weight: 500;
+  font-size: 14px;
+  padding: 6px 14px;
+  border-radius: 4px;
+  margin-top: 10px;
+  margin-bottom: 5px;
+  display: inline-block;
+}
+
+/* Fix content padding to ensure text is clearly visible */
+.citationPanelContentWrapper {
+  padding: 24px 28px;
+}
+
+:global(.dark-mode) .citationPanelContent {
+  color: #5aa0ff;
+  font-weight: 400;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+/* Update document title styling to match screenshot */
+:global(.dark-mode) .citationPanelDocTitle {
+  background-color: #1a1b2e;
+  color: #5aa0ff;
+  border-left: 4px solid #5aa0ff;
+  text-transform: none;
+  font-size: 20px;
+  font-weight: 600;
+  padding: 10px 15px;
+  margin-left: 6px;
+}
+
+/* Update OVERVIEW title styling */
+:global(.dark-mode) .citationPanelSectionTitle {
+  color: #5aa0ff;
+  font-size: 18px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0;
+  margin-top: 0;
+  margin-bottom: 10px;
+  padding-left: 10px;
+  border-bottom: none;
+  display: inline-block;
+}
+
+:global(.dark-mode) .citationPanelSectionTitle::after {
+  background: none;
+}
+
+/* Update panel background to match screenshot */
+:global(.dark-mode) .citationPanel {
+  background-color: #1a1b2e;
+  border: none;
+}
+
+/* Update content wrapper to match screenshot */
+:global(.dark-mode) .citationPanelContentWrapper {
+  background-color: #1a1b2e;
+  border: none;
+  box-shadow: none;
+}
+
+/* Fix icon colors and positions */
+:global(.dark-mode) .citationCardIcon {
+  color: #5aa0ff;
+}
+
+:global(.dark-mode) .citationPanelDocTitle::before {
+  content: "";
+  margin-right: 0;
+}
+
+/* Update citation card icon */
+.citationCardIcon {
+  color: #115ea3;
+  font-size: 20px;
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+
+:global(.dark-mode) .citationCardIcon {
+  color: #5aa0ff;
+  font-size: 18px;
+}
+
+/* Add document icon for source document */
+:global(.dark-mode) .citationCard {
+  background-color: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  margin-top: 5px;
+  margin-bottom: 10px;
+  align-items: center;
+}
+
+/* Update electric PID valve controllers title */
+:global(.dark-mode) .citationPanelDocTitle {
+  background-color: transparent;
+  color: #5aa0ff;
+  border-left: 4px solid #5aa0ff;
+  text-transform: none;
+  font-size: 20px;
+  font-weight: 500;
+  padding: 0 0 0 10px;
+  margin: 0 0 0 6px;
+  box-shadow: none;
+  display: flex;
+  align-items: center;
+}
+
+/* Fix background and remove border from main panels */
+:global(.dark-mode) .citationPanel {
+  background-color: #1a1b2e;
+  border: none;
+  box-shadow: none;
+}
+
+:global(.dark-mode) .citationPanelContentWrapper {
+  background-color: #1a1b2e;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  margin-top: 5px;
+}
+
+/* Position the OVERVIEW title correctly */
+:global(.dark-mode) .citationPanelSectionTitle {
+  color: #5aa0ff;
+  font-size: 18px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0;
+  margin-top: 0;
+  margin-bottom: 10px;
+  padding-left: 10px;
+  border-bottom: none;
+  display: inline-block;
+}
+
+/* Fix Source document text */
+:global(.dark-mode) .citationPanelTitle {
+  color: #5aa0ff;
+  font-size: 16px;
+  font-weight: 400;
+  margin-top: 0;
+  margin-bottom: 15px;
+  margin-left: 5px;
+}
+
+/* Adjust the document icon color */
+:global(.dark-mode) .citationPanelDismiss {
+  color: #5aa0ff;
+}
+
+/* Adjust content styling for perfect match */
+:global(.dark-mode) .citationPanelContent {
+  padding: 5px 10px 5px 10px;
 }
