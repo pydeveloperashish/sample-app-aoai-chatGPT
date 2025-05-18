@@ -12,28 +12,14 @@ import './index.css'
 
 initializeIcons("https://res.cdn.office.net/files/fabric-cdn-prod_20241209.001/assets/icons/")
 
-// Check user's dark mode preference
-const prefersDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-const savedTheme = localStorage.getItem('app-theme');
-const isDarkMode = savedTheme ? savedTheme === 'dark' : prefersDarkMode;
+// Always use dark mode
+document.documentElement.classList.add('dark-mode');
+localStorage.setItem('app-theme', 'dark');
 
-// Set dark mode class on root element
-if (isDarkMode) {
-  document.documentElement.classList.add('dark-mode');
-} else {
-  document.documentElement.classList.remove('dark-mode');
-}
-
-// Add theme toggle function to window for global access
+// Remove theme toggle functionality
 (window as any).toggleTheme = () => {
-  const isDark = document.documentElement.classList.contains('dark-mode');
-  if (isDark) {
-    document.documentElement.classList.remove('dark-mode');
-    localStorage.setItem('app-theme', 'light');
-  } else {
-    document.documentElement.classList.add('dark-mode');
-    localStorage.setItem('app-theme', 'dark');
-  }
+  // Do nothing - dark mode is always enabled
+  return;
 };
 
 export default function App() {

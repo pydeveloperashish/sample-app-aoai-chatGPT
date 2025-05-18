@@ -6,7 +6,6 @@ import { CopyRegular } from '@fluentui/react-icons'
 import { CosmosDBStatus } from '../../api'
 import Contoso from '../../assets/Contoso.svg'
 import { HistoryButton, ShareButton } from '../../components/common/Button'
-import ThemeToggle from '../../components/common/ThemeToggle'
 import { AppStateContext } from '../../state/AppProvider'
 
 import styles from './Layout.module.css'
@@ -85,7 +84,6 @@ const Layout = () => {
             </Link>
           </Stack>
           <Stack horizontal verticalAlign="center" tokens={{ childrenGap: 8 }} className={styles.shareButtonContainer}>
-            <ThemeToggle />
             {appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured && ui?.show_chat_history_button !== false && (
               <HistoryButton
                 onClick={handleHistoryClick}
