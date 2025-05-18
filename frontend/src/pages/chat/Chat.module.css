@@ -1,21 +1,5 @@
-/* Root container with dark mode support */
+/* Root container with dark mode as default */
 :root {
-  --primary-color: #115EA3;
-  --primary-color-dark: #0e4d84;
-  --highlight-color: rgba(255, 235, 59, 0.5);
-  --text-color: #242424;
-  --text-color-secondary: #616161;
-  --background-primary: #f8f9fa;
-  --background-secondary: #f0f2f5;
-  --background-tertiary: #e6eef7;
-  --border-color: #e0e5ec;
-  --shadow-color: rgba(0, 0, 0, 0.08);
-  --card-bg: #f8f9fc;
-  --input-bg: #f5f7fa;
-  --hover-bg: #edf2f7;
-}
-
-:root.dark-mode {
   --primary-color: #5aa0ff;
   --primary-color-dark: #4a90ff;
   --highlight-color: rgba(255, 220, 0, 0.4);
@@ -38,6 +22,7 @@
   --navy-blue-lighter: #112240;
 }
 
+/* Container styles */
 .container {
   flex: 1;
   display: flex;
@@ -54,6 +39,7 @@
   margin-left: 20px;
   margin-right: 20px;
   gap: 5px;
+  background-color: #0a1929 !important;
 }
 
 .chatContainer {
@@ -61,14 +47,14 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  background: radial-gradient(108.78% 108.78% at 50.02% 19.78%, var(--background-primary) 57.29%, var(--background-tertiary) 100%);
+  background: #0a1929;
   box-shadow:
     0px 2px 4px rgba(0, 0, 0, 0.14),
     0px 0px 2px var(--shadow-color);
   border-radius: 8px;
   overflow-y: auto;
   max-height: calc(100vh - 100px);
-  color: var(--text-color);
+  color: #ffffff;
 }
 
 .chatEmptyState {
@@ -130,7 +116,7 @@
   position: relative;
   display: flex;
   padding: 20px;
-  background: var(--card-bg, #f8f9fc);
+  background: #112240;
   border-radius: 8px;
   box-shadow:
     0px 2px 4px rgba(0, 0, 0, 0.14),
@@ -139,7 +125,7 @@
   font-weight: 400;
   font-size: 14px;
   line-height: 22px;
-  color: var(--text-color);
+  color: #ffffff;
   order: 0;
   flex-grow: 0;
   white-space: pre-wrap;
@@ -151,6 +137,7 @@
   margin-bottom: 12px;
   max-width: 80%;
   display: flex;
+  color: #ffffff !important;
 }
 
 .chatMessageError {
@@ -284,12 +271,12 @@
   align-items: flex-start;
   padding: 20px;
   gap: 10px;
-  background: var(--card-bg, #f8f9fc);
+  background: #0a1929 !important;
   box-shadow:
     0px 4px 12px rgba(0, 0, 0, 0.08),
     0px 2px 4px rgba(0, 0, 0, 0.12);
   border-radius: 10px;
-  border: 1px solid var(--border-color);
+  border: none;
   flex: auto;
   order: 0;
   align-self: stretch;
@@ -497,10 +484,10 @@
   max-height: 500px;
   overflow-y: auto;
   padding: 24px 28px;
-  border: 1px solid var(--border-color);
+  border: none;
   border-radius: 8px;
   margin-top: 14px;
-  background-color: var(--input-bg, #f5f7fa);
+  background-color: #0a1929 !important;
   box-shadow: inset 0 1px 3px rgba(0,0,0,0.08);
 }
 
@@ -565,22 +552,6 @@
 }
 
 /* Enhanced citation highlight styles */
-:global(.dark-mode) .citationPanelContent strong,
-:global(.dark-mode) .citationPanelContent b {
-  color: var(--primary-color);
-  font-weight: 700;
-}
-
-:global(.dark-mode) .citationPanelContent h1,
-:global(.dark-mode) .citationPanelContent h2,
-:global(.dark-mode) .citationPanelContent h3,
-:global(.dark-mode) .citationPanelContent h4,
-:global(.dark-mode) .citationPanelContent h5,
-:global(.dark-mode) .citationPanelContent h6 {
-  color: var(--primary-color);
-}
-
-/* Enhance code blocks for better visibility */
 .citationPanelContent code {
   background-color: var(--background-tertiary);
   padding: 2px 6px;
@@ -721,6 +692,7 @@
 a {
   padding-left: 5px;
   padding-right: 5px;
+  color: #5aa0ff !important;
 }
 
 .viewSourceButton {
@@ -816,177 +788,19 @@ a {
   100% { background-color: var(--highlight-color); }
 }
 
-/* Apply dark mode based on user preference */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --primary-color: #3b8fd4;
-    --primary-color-dark: #2b79b9;
-    --highlight-color: rgba(255, 200, 0, 0.3);
-    --text-color: #e0e0e0;
-    --text-color-secondary: #a0a0a0;
-    --background-primary: #1e1e2e;
-    --background-secondary: #252536;
-    --background-tertiary: #2a2a3c;
-    --border-color: #3f3f5c;
-    --shadow-color: rgba(0, 0, 0, 0.35);
-  }
-}
-
-/* Improve the document panel in dark mode */
-:global(.dark-mode) .citationPanel {
-  background-color: var(--citation-panel-bg);
-  border-color: #394176;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-  color: var(--text-color);
-}
-
-/* Fix the chat container in dark mode */
-:global(.dark-mode) .chatContainer {
-  background: radial-gradient(108.78% 108.78% at 50.02% 19.78%, var(--background-primary), var(--background-secondary));
-}
-
-/* Improve document section styles for dark mode */
-:global(.dark-mode) .citationPanelDocTitle {
-  background-color: #1a1b2e;
-  color: #7cb3ff;
-  border-left-color: #5a9eff;
-}
-
-:global(.dark-mode) .citationPanelContentWrapper {
-  background-color: var(--citation-content-bg);
-  border-color: #394176;
-}
-
-/* Enhance the shine effect for document title in dark mode */
-:global(.dark-mode) .citationPanelDocTitle::before {
-  background: linear-gradient(to right, rgba(59, 143, 212, 0.2), rgba(59, 143, 212, 0.05));
-}
-
-:global(.dark-mode) .citationPanelDocTitle::after {
-  background: radial-gradient(circle, rgba(59, 143, 212, 0.3) 0%, transparent 70%);
-}
-
-/* Style the overview title for dark mode */
-:global(.dark-mode) .citationPanelSectionTitle {
-  color: #7cb3ff;
-  border-bottom-color: var(--border-color);
-}
-
-/* Improve the document info display in dark mode */
-:global(.dark-mode) .citationPanelDocInfo {
-  background-color: #1a1b2e;
-  color: #7cb3ff;
-  border-color: #394176;
-}
-
-/* Add styling for the chat root background in dark mode */
-:global(.dark-mode) .chatRoot {
-  background-color: #0a1929 !important;
-}
-
-/* Make the message content look better in dark mode */
-:global(.dark-mode) .chatMessageUserMessage {
-  background-color: var(--card-bg);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
-}
-
-/* Style the message from GPT in dark mode */
-:global(.dark-mode) .chatMessageGpt {
+/* Global elements styling */
+body,
+html,
+#root,
+.app {
   background-color: #0a1929 !important;
   color: #ffffff !important;
-  border-radius: 8px;
-  padding: 10px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
-/* Style the document card in dark mode */
-:global(.dark-mode) .citationCard {
-  background-color: var(--background-secondary);
-  border-color: var(--border-color);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-}
-
-/* Enhance the highlight citation in dark mode */
-:global(.dark-mode) .highlightCitation {
-  background-color: rgba(255, 220, 0, 0.25);
-  border-bottom: 2px solid rgba(255, 220, 0, 0.4);
-  color: #ffffff;
-  font-weight: 700;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-}
-
-/* Style inputs in dark mode */
-:global(.dark-mode) input,
-:global(.dark-mode) textarea {
-  background-color: var(--background-secondary);
-  color: var(--text-color);
-  border-color: var(--border-color);
-}
-
-/* Make document content elements look better in dark mode */
-:global(.dark-mode) .citationPanelContent code {
-  background-color: rgba(30, 34, 53, 0.7);
-  color: #ff9e64;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5);
-  font-weight: 600;
-}
-
-:global(.dark-mode) .citationPanelContent pre {
-  background-color: rgba(0, 0, 0, 0.25);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-:global(.dark-mode) .citationPanelContent blockquote {
-  border-left-color: var(--primary-color);
-  color: var(--text-color-secondary);
-}
-
-/* Add a subtle texture to the background */
-:global(.dark-mode) .citationPanel::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-image: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.03' fill-rule='evenodd'%3E%3Ccircle cx='3' cy='3' r='1'/%3E%3C/g%3E%3C/svg%3E");
-  pointer-events: none;
-  opacity: 0.5;
-  z-index: 0;
-}
-
-/* Add gradient overlay to the document content */
-:global(.dark-mode) .citationPanelContentWrapper::after {
-  content: "";
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 40px;
-  background: linear-gradient(to bottom, transparent, var(--background-secondary));
-  pointer-events: none;
-}
-
-/* Add styles for better dark mode background */
-:global(.dark-mode) {
-  --background-overlay: rgba(0, 0, 0, 0.4);
-}
-
-:global(.dark-mode) body,
-:global(.dark-mode) html {
-  background-color: var(--background-primary);
-  background-image: url("data:image/svg+xml,%3Csvg width='30' height='30' viewBox='0 0 30 30' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%233b3b5c' fill-opacity='0.07' fill-rule='evenodd'%3E%3Cpath d='M0 0h30v30H0z'/%3E%3C/g%3E%3C/svg%3E");
-  background-attachment: fixed;
-}
-
-:global(.dark-mode) .layout {
-  background-color: var(--background-primary);
-}
-
-:global(.dark-mode) .header {
-  background-color: var(--background-secondary);
-  border-bottom: 1px solid var(--border-color);
+/* Force dark mode on HTML element */
+html {
+  background-color: #0a1929 !important;
+  color-scheme: dark !important;
 }
 
 /* Add beautiful scrollbars to the document panel */
@@ -1012,13 +826,13 @@ a {
 }
 
 /* Dark mode scrollbars */
-:global(.dark-mode) .citationPanel::-webkit-scrollbar-thumb,
-:global(.dark-mode) .citationPanelContentWrapper::-webkit-scrollbar-thumb {
+.citationPanel::-webkit-scrollbar-thumb,
+.citationPanelContentWrapper::-webkit-scrollbar-thumb {
   background-color: rgba(80, 80, 100, 0.5);
 }
 
-:global(.dark-mode) .citationPanel::-webkit-scrollbar-thumb:hover,
-:global(.dark-mode) .citationPanelContentWrapper::-webkit-scrollbar-thumb:hover {
+.citationPanel::-webkit-scrollbar-thumb:hover,
+.citationPanelContentWrapper::-webkit-scrollbar-thumb:hover {
   background-color: rgba(100, 100, 150, 0.7);
 }
 
@@ -1044,13 +858,6 @@ a {
   transition: all 0.2s ease;
 }
 
-:global(.dark-mode) .chatInput input,
-:global(.dark-mode) .chatInput textarea {
-  background-color: #000000;
-  color: #ffffff;
-  border-color: #394176;
-}
-
 .chatInput input:focus,
 .chatInput textarea:focus {
   border-color: var(--primary-color);
@@ -1058,35 +865,18 @@ a {
   background-color: var(--background-primary);
 }
 
-:global(.dark-mode) .chatInput input:focus,
-:global(.dark-mode) .chatInput textarea:focus {
-  background-color: #000000;
-  color: #ffffff;
-  border-color: var(--primary-color);
-}
-
 /* Button styling */
 button {
-  background-color: var(--input-bg);
-  color: var(--text-color);
-  border: 1px solid var(--border-color);
+  background-color: #0a1929;
+  color: #ffffff;
+  border: 1px solid #394176;
   border-radius: 4px;
   padding: 6px 12px;
   transition: all 0.2s ease;
 }
 
 button:hover {
-  background-color: var(--hover-bg);
-}
-
-:global(.dark-mode) button {
-  background-color: #000000;
-  color: #ffffff;
-  border-color: #394176;
-}
-
-:global(.dark-mode) button:hover {
-  background-color: #1e2021;
+  background-color: #112240;
 }
 
 /* Add subtle transition to all elements */
@@ -1094,15 +884,15 @@ button:hover {
   transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
-/* Add frosted glass effect to the citation panel in dark mode */
-:global(.dark-mode) .citationPanel {
+/* Add frosted glass effect to the citation panel */
+.citationPanel {
   background-color: rgba(26, 29, 45, 0.7);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border: 1px solid rgba(56, 65, 97, 0.5);
 }
 
-:global(.dark-mode) .citationPanelHeaderContainer {
+.citationPanelHeaderContainer {
   background: transparent;
   border-bottom: 1px solid #394176;
   padding-bottom: 6px;
@@ -1129,13 +919,9 @@ button:hover {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
 }
 
-:global(.dark-mode) .citationCard:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
-}
-
 /* Improve paragraph text in dark mode */
-:global(.dark-mode) .citationPanelContent p,
-:global(.dark-mode) .citationPanelContent li {
+.citationPanelContent p,
+.citationPanelContent li {
   color: #ffffff;
   text-shadow: 0 0 0.5px rgba(255, 255, 255, 0.1);
 }
@@ -1146,12 +932,8 @@ button:hover {
   padding-bottom: 8px;
 }
 
-:global(.dark-mode) .citationPanelContent h2 {
-  border-bottom: 1px solid rgba(59, 143, 212, 0.3);
-}
-
 /* Make content text more visible */
-:global(.dark-mode) .citationPanelContent {
+.citationPanelContent {
   color: #ffffff;
   text-shadow: 0 0 0.5px rgba(255, 255, 255, 0.1);
   font-weight: 400;
@@ -1160,39 +942,40 @@ button:hover {
 }
 
 /* Make paragraph and list text more visible */
-:global(.dark-mode) .citationPanelContent p,
-:global(.dark-mode) .citationPanelContent li {
+.citationPanelContent p,
+.citationPanelContent li {
   color: #ffffff;
   text-shadow: 0 0 0.5px rgba(255, 255, 255, 0.1);
   margin-bottom: 16px;
 }
 
 /* Make headings stand out */
-:global(.dark-mode) .citationPanelContent h1,
-:global(.dark-mode) .citationPanelContent h2,
-:global(.dark-mode) .citationPanelContent h3,
-:global(.dark-mode) .citationPanelContent h4,
-:global(.dark-mode) .citationPanelContent h5,
-:global(.dark-mode) .citationPanelContent h6 {
+.citationPanelContent h1,
+.citationPanelContent h2,
+.citationPanelContent h3,
+.citationPanelContent h4,
+.citationPanelContent h5,
+.citationPanelContent h6 {
   color: #7cb3ff;
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
 }
 
 /* Make the code stand out better with higher contrast */
-:global(.dark-mode) .citationPanelContent code {
-  background-color: #000000;
-  color: #ffb86c;
-  border: 1px solid #394176;
+.citationPanelContent code {
+  background-color: rgba(30, 34, 53, 0.7);
+  color: #ff9e64;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5);
+  font-weight: 600;
 }
 
 /* Make links more visible */
-:global(.dark-mode) .citationPanelContent a {
+.citationPanelContent a {
   color: #7cb3ff;
   font-weight: 600;
 }
 
-:global(.dark-mode) .citationPanelContent a:hover {
+.citationPanelContent a:hover {
   background-color: rgba(124, 179, 255, 0.1);
 }
 
@@ -1206,19 +989,8 @@ button:hover {
   text-transform: uppercase;
 }
 
-:global(.dark-mode) .citationPanelHeader {
-  color: #5aa0ff;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-  font-size: 26px;
-  letter-spacing: 0px;
-  text-transform: none;
-  font-weight: 600;
-  margin: 0;
-  padding: 0;
-}
-
 /* Match Page 1 text color */
-:global(.dark-mode) .citationPanelDocInfo {
+.citationPanelDocInfo {
   background-color: #272a3f;
   color: #5aa0ff;
   border: none;
@@ -1236,15 +1008,8 @@ button:hover {
   padding: 24px 28px;
 }
 
-:global(.dark-mode) .citationPanelContent {
-  color: #5aa0ff;
-  font-weight: 400;
-  font-size: 15px;
-  line-height: 1.6;
-}
-
 /* Update document title styling to match screenshot */
-:global(.dark-mode) .citationPanelDocTitle {
+.citationPanelDocTitle {
   background-color: #1a1b2e;
   color: #5aa0ff;
   border-left: 4px solid #5aa0ff;
@@ -1256,7 +1021,7 @@ button:hover {
 }
 
 /* Update OVERVIEW title styling */
-:global(.dark-mode) .citationPanelSectionTitle {
+.citationPanelSectionTitle {
   color: #5aa0ff;
   font-size: 18px;
   font-weight: 600;
@@ -1269,48 +1034,41 @@ button:hover {
   display: inline-block;
 }
 
-:global(.dark-mode) .citationPanelSectionTitle::after {
+.citationPanelSectionTitle::after {
   background: none;
 }
 
 /* Update panel background to match screenshot */
-:global(.dark-mode) .citationPanel {
+.citationPanel {
   background-color: #1a1b2e;
   border: none;
 }
 
 /* Update content wrapper to match screenshot */
-:global(.dark-mode) .citationPanelContentWrapper {
+.citationPanelContentWrapper {
   background-color: #1a1b2e;
   border: none;
   box-shadow: none;
 }
 
 /* Fix icon colors and positions */
-:global(.dark-mode) .citationCardIcon {
+.citationCardIcon {
   color: #5aa0ff;
 }
 
-:global(.dark-mode) .citationPanelDocTitle::before {
+.citationPanelDocTitle::before {
   content: "";
   margin-right: 0;
 }
 
 /* Update citation card icon */
 .citationCardIcon {
-  color: #115ea3;
-  font-size: 20px;
-  margin-right: 8px;
-  flex-shrink: 0;
-}
-
-:global(.dark-mode) .citationCardIcon {
   color: #5aa0ff;
   font-size: 18px;
 }
 
 /* Add document icon for source document */
-:global(.dark-mode) .citationCard {
+.citationCard {
   background-color: transparent;
   border: none;
   box-shadow: none;
@@ -1321,7 +1079,7 @@ button:hover {
 }
 
 /* Update electric PID valve controllers title */
-:global(.dark-mode) .citationPanelDocTitle {
+.citationPanelDocTitle {
   background-color: transparent;
   color: #5aa0ff;
   border-left: 4px solid #5aa0ff;
@@ -1336,13 +1094,13 @@ button:hover {
 }
 
 /* Fix background and remove border from main panels */
-:global(.dark-mode) .citationPanel {
+.citationPanel {
   background-color: #1a1b2e;
   border: none;
   box-shadow: none;
 }
 
-:global(.dark-mode) .citationPanelContentWrapper {
+.citationPanelContentWrapper {
   background-color: #1a1b2e;
   border: none;
   box-shadow: none;
@@ -1351,7 +1109,7 @@ button:hover {
 }
 
 /* Position the OVERVIEW title correctly */
-:global(.dark-mode) .citationPanelSectionTitle {
+.citationPanelSectionTitle {
   color: #5aa0ff;
   font-size: 18px;
   font-weight: 600;
@@ -1365,7 +1123,7 @@ button:hover {
 }
 
 /* Fix Source document text */
-:global(.dark-mode) .citationPanelTitle {
+.citationPanelTitle {
   color: #5aa0ff;
   font-size: 16px;
   font-weight: 400;
@@ -1375,12 +1133,12 @@ button:hover {
 }
 
 /* Adjust the document icon color */
-:global(.dark-mode) .citationPanelDismiss {
+.citationPanelDismiss {
   color: #5aa0ff;
 }
 
 /* Adjust content styling for perfect match */
-:global(.dark-mode) .citationPanelContent {
+.citationPanelContent {
   padding: 5px 10px 5px 10px;
 }
 
@@ -1395,13 +1153,6 @@ button:hover {
   transition: all 0.2s ease;
 }
 
-:global(.dark-mode) .chatInput input,
-:global(.dark-mode) .chatInput textarea {
-  background-color: #000000;
-  color: #ffffff;
-  border-color: #394176;
-}
-
 .chatInput input:focus,
 .chatInput textarea:focus {
   border-color: var(--primary-color);
@@ -1409,45 +1160,14 @@ button:hover {
   background-color: var(--background-primary);
 }
 
-:global(.dark-mode) .chatInput input:focus,
-:global(.dark-mode) .chatInput textarea:focus {
-  background-color: #000000;
-  color: #ffffff;
-  border-color: var(--primary-color);
-}
-
-/* Button styling */
-button {
-  background-color: var(--input-bg);
-  color: var(--text-color);
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  padding: 6px 12px;
-  transition: all 0.2s ease;
-}
-
-button:hover {
-  background-color: var(--hover-bg);
-}
-
-:global(.dark-mode) button {
-  background-color: #000000;
-  color: #ffffff;
-  border-color: #394176;
-}
-
-:global(.dark-mode) button:hover {
-  background-color: #1e2021;
-}
-
 /* User message styling */
-:global(.dark-mode) .chatMessageUserMessage {
+.chatMessageUserMessage {
   background-color: #112240;
   color: #ffffff;
 }
 
 /* Make content text more visible */
-:global(.dark-mode) .citationPanelContent {
+.citationPanelContent {
   color: #ffffff;
   text-shadow: 0 0 0.5px rgba(255, 255, 255, 0.1);
   font-weight: 400;
@@ -1456,21 +1176,21 @@ button:hover {
 }
 
 /* Make paragraph and list text more visible */
-:global(.dark-mode) .citationPanelContent p,
-:global(.dark-mode) .citationPanelContent li {
+.citationPanelContent p,
+.citationPanelContent li {
   color: #ffffff;
   text-shadow: 0 0 0.5px rgba(255, 255, 255, 0.1);
   margin-bottom: 16px;
 }
 
 /* Update citation panel background */
-:global(.dark-mode) .citationPanel {
+.citationPanel {
   background-color: #1a1b2e;
   border: none;
   box-shadow: none;
 }
 
-:global(.dark-mode) .citationPanelContentWrapper {
+.citationPanelContentWrapper {
   background-color: #1a1b2e;
   border: none;
   box-shadow: none;
@@ -1479,38 +1199,38 @@ button:hover {
 }
 
 /* Main chat container */
-:global(.dark-mode) .chatContainer {
+.chatContainer {
   background: #0a1929;
 }
 
 /* Code styling in citation panel */
-:global(.dark-mode) .citationPanelContent code {
+.citationPanelContent code {
   background-color: #112240;
   color: #ffb86c;
 }
 
 /* Query input area */
-:global(.dark-mode) .chatInput {
+.chatInput {
   background-color: #0a1929;
 }
 
 /* Chat text input */
-:global(.dark-mode) #queryInput,
-:global(.dark-mode) .queryInput {
+#queryInput,
+.queryInput {
   background-color: #0a1929;
   color: #ffffff;
   border-color: #394176;
 }
 
 /* Send button */
-:global(.dark-mode) .sendButton {
+.sendButton {
   background-color: #0a1929;
   color: #ffffff;
 }
 
 /* Ask your question placeholder */
-:global(.dark-mode) input::placeholder,
-:global(.dark-mode) textarea::placeholder {
+input::placeholder,
+textarea::placeholder {
   color: #888888;
 }
 
@@ -1528,408 +1248,340 @@ button:hover {
   width: 100%;
 }
 
-:global(.dark-mode) .citationCard {
-  background-color: #1a1b2e;
-  border-color: #394176;
-}
-
 /* Update the chat area background */
-:global(.dark-mode) .chatContainer {
+.chatContainer {
   background: #0a1929;
   color: #ffffff;
 }
 
 /* Update the document content area */
-:global(.dark-mode) .citationPanelContentWrapper {
+.citationPanelContentWrapper {
   background-color: #1a1b2e;
   border: none;
   box-shadow: none;
 }
 
 /* Style the input query box specifically */
-:global(.dark-mode) #queryInput,
-:global(.dark-mode) .queryInput {
+#queryInput,
+.queryInput {
   background-color: #0a1929;
   color: #ffffff;
   border-color: #394176;
 }
 
 /* Style the send button */
-:global(.dark-mode) .sendButton {
+.sendButton {
   background-color: #0a1929;
   color: #ffffff;
 }
 
 /* Add a pure black background to the main chat interface elements */
-:global(.dark-mode) .chatRoot {
+.chatRoot {
   background-color: #1a1b2e;
 }
 
-:global(.dark-mode) .container {
+.container {
   background-color: #1a1b2e;
 }
 
 /* Fix any dialog or popup backgrounds */
-:global(.dark-mode) .dialog,
-:global(.dark-mode) .modal,
-:global(.dark-mode) .popup {
+.dialog,
+.modal,
+.popup {
   background-color: #000000;
   color: #ffffff;
   border-color: #394176;
 }
 
 /* Update the search icon color if present */
-:global(.dark-mode) .searchIcon {
-  color: #ffffff;
-}
-
-/* Add styling for the input placeholder */
-:global(.dark-mode) input::placeholder,
-:global(.dark-mode) textarea::placeholder {
-  color: #888888;
-}
-
-/* Add a pure black background to the main chat interface elements */
-:global(.dark-mode) .chatRoot {
-  background-color: #1a1b2e;
-}
-
-:global(.dark-mode) .container {
-  background-color: #1a1b2e;
-}
-
-/* Fix any dialog or popup backgrounds */
-:global(.dark-mode) .dialog,
-:global(.dark-mode) .modal,
-:global(.dark-mode) .popup {
-  background-color: #000000;
-  color: #ffffff;
-  border-color: #394176;
-}
-
-/* Update the search icon color if present */
-:global(.dark-mode) .searchIcon {
+.searchIcon {
   color: #ffffff;
 }
 
 /* Update the text input fields */
-:global(.dark-mode) input[type="text"],
-:global(.dark-mode) input[type="search"],
-:global(.dark-mode) input[type="email"],
-:global(.dark-mode) input[type="password"],
-:global(.dark-mode) textarea,
-:global(.dark-mode) select {
+input[type="text"],
+input[type="search"],
+input[type="email"],
+input[type="password"],
+textarea,
+select {
   background-color: #000000;
   color: #ffffff;
   border-color: #394176;
 }
 
 /* Fix the white text in "tell me about amot valve" query field */
-:global(.dark-mode) #queryInput,
-:global(.dark-mode) .queryInput {
+#queryInput,
+.queryInput {
   background-color: #000000;
   color: #ffffff;
   border-color: #394176;
 }
 
 /* Update any remaining white background elements */
-:global(.dark-mode) .chatMessageGpt {
+.chatMessageGpt {
   color: #ffffff;
 }
 
 /* Fix the "AI-generated content may be incorrect" text */
-:global(.dark-mode) .disclaimer,
-:global(.dark-mode) .warning {
+.disclaimer,
+.warning {
   color: #888888;
 }
 
 /* For the "ask your question" input at the bottom */
-:global(.dark-mode) .askQuestionContainer,
-:global(.dark-mode) .askQuestionInput {
+.askQuestionContainer,
+.askQuestionInput {
   background-color: #000000;
   color: #ffffff;
 }
 
 /* Ensure headers and buttons are properly styled */
-:global(.dark-mode) h1,
-:global(.dark-mode) h2,
-:global(.dark-mode) h3,
-:global(.dark-mode) h4,
-:global(.dark-mode) h5,
-:global(.dark-mode) h6,
-:global(.dark-mode) button,
-:global(.dark-mode) .btn,
-:global(.dark-mode) .button {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+button,
+.btn,
+.button {
   color: #ffffff;
 }
 
 /* Add specific styles for the "Ask your question..." input box in the chat footer */
-:global(.dark-mode) .askYourQuestion,
-:global(.dark-mode) [placeholder="Ask your question..."] {
+.askYourQuestion,
+[placeholder="Ask your question..."] {
   background-color: #0a1929 !important;
   color: #ffffff !important;
   border-color: #394176 !important;
 }
 
 /* Add specific styles for the send button */
-:global(.dark-mode) .sendButton,
-:global(.dark-mode) button[type="submit"] {
+.sendButton,
+button[type="submit"] {
   background-color: #0a1929 !important;
   color: #ffffff !important;
   border-color: #394176 !important;
 }
 
 /* Target the "tell me about amot valve" search box */
-:global(.dark-mode) input[type="text"],
-:global(.dark-mode) input[type="search"],
-:global(.dark-mode) textarea {
+input[type="text"],
+input[type="search"],
+textarea {
   background-color: #0a1929 !important;
   color: #ffffff !important;
   border-color: #394176 !important;
 }
 
 /* Style all white background areas to be navy blue with white text */
-:global(.dark-mode) .inputArea,
-:global(.dark-mode) .searchBar,
-:global(.dark-mode) .queryBox {
+.inputArea,
+.searchBar,
+.queryBox {
   background-color: #0a1929 !important;
   color: #ffffff !important;
 }
 
 /* Make sure the chat input textarea has navy blue background */
-:global(.dark-mode) #queryInput,
-:global(.dark-mode) .queryInput,
-:global(.dark-mode) textarea#message,
-:global(.dark-mode) textarea.message {
+#queryInput,
+.queryInput,
+textarea#message,
+textarea.message {
   background-color: #0a1929 !important;
   color: #ffffff !important;
   border-color: #394176 !important;
 }
 
 /* Add specific targeting for the message input */
-:global(.dark-mode) [role="textbox"],
-:global(.dark-mode) [contenteditable="true"] {
+[role="textbox"],
+[contenteditable="true"] {
   background-color: #0a1929 !important;
   color: #ffffff !important;
 }
 
 /* Style the search box at the top specifically */
-:global(.dark-mode) [placeholder="tell me about amot valve"],
-:global(.dark-mode) .ms-TextField-field,
-:global(.dark-mode) .ms-TextField-fieldGroup,
-:global(.dark-mode) .ms-SearchBox-field,
-:global(.dark-mode) .ms-SearchBox,
-:global(.dark-mode) .searchField {
+[placeholder="tell me about amot valve"],
+.ms-TextField-field,
+.ms-TextField-fieldGroup,
+.ms-SearchBox-field,
+.ms-SearchBox,
+.searchField {
   background-color: #0a1929 !important;
   color: #ffffff !important;
   border-color: #394176 !important;
 }
 
 /* Target the chat input box at the bottom with "Ask your question..." */
-:global(.dark-mode) [placeholder="Ask your question..."],
-:global(.dark-mode) .chat-input,
-:global(.dark-mode) .user-input,
-:global(.dark-mode) .message-input,
-:global(.dark-mode) .chat-text-area {
+[placeholder="Ask your question..."],
+.chat-input,
+.user-input,
+.message-input,
+.chat-text-area {
   background-color: #0a1929 !important;
   color: #ffffff !important;
   border-color: #394176 !important;
 }
 
 /* Target any navigation bars or menus */
-:global(.dark-mode) nav,
-:global(.dark-mode) .nav,
-:global(.dark-mode) .navbar,
-:global(.dark-mode) .navigation,
-:global(.dark-mode) header,
-:global(.dark-mode) .header {
+nav,
+.nav,
+.navbar,
+.navigation,
+header,
+.header {
   background-color: #0a1929 !important;
   color: #ffffff !important;
 }
 
 /* Target any cards or containers that might be white */
-:global(.dark-mode) .card,
-:global(.dark-mode) .container,
-:global(.dark-mode) .panel,
-:global(.dark-mode) .box,
-:global(.dark-mode) section,
-:global(.dark-mode) article,
-:global(.dark-mode) aside {
+.card,
+.container,
+.panel,
+.box,
+section,
+article,
+aside {
   background-color: #0a1929 !important;
   color: #ffffff !important;
 }
 
 /* Target inputs with specific names that might match the search field */
-:global(.dark-mode) input[name="query"],
-:global(.dark-mode) input[name="search"],
-:global(.dark-mode) input[name="q"],
-:global(.dark-mode) input[id="search"],
-:global(.dark-mode) input[id="query"],
-:global(.dark-mode) input[id="q"] {
+input[name="query"],
+input[name="search"],
+input[name="q"],
+input[id="search"],
+input[id="query"],
+input[id="q"] {
   background-color: #0a1929 !important;
   color: #ffffff !important;
   border-color: #394176 !important;
 }
 
 /* Style the "X" button visible in the screenshot to clear search */
-:global(.dark-mode) .clear-button,
-:global(.dark-mode) .clear-search,
-:global(.dark-mode) .clear-input,
-:global(.dark-mode) .close-button,
-:global(.dark-mode) .ms-Button--icon,
-:global(.dark-mode) button.ms-SearchBox-clearButton {
+.clear-button,
+.clear-search,
+.clear-input,
+.close-button,
+.ms-Button--icon,
+button.ms-SearchBox-clearButton {
   background-color: #0a1929 !important;
   color: #ffffff !important;
 }
 
 /* Force very specific styling for React-based MaterialUI components */
-:global(.dark-mode) .MuiInputBase-root,
-:global(.dark-mode) .MuiOutlinedInput-root,
-:global(.dark-mode) .MuiInput-root,
-:global(.dark-mode) .MuiTextField-root input,
-:global(.dark-mode) .MuiSelect-root,
-:global(.dark-mode) .MuiAutocomplete-input {
+.MuiInputBase-root,
+.MuiOutlinedInput-root,
+.MuiInput-root,
+.MuiTextField-root input,
+.MuiSelect-root,
+.MuiAutocomplete-input {
   background-color: #0a1929 !important;
   color: #ffffff !important;
   border-color: #394176 !important;
 }
 
 /* Target any white backgrounds in the main chat window */
-:global(.dark-mode) .main,
-:global(.dark-mode) main,
-:global(.dark-mode) .content,
-:global(.dark-mode) .chat-window,
-:global(.dark-mode) .message-container {
+.main,
+main,
+.content,
+.chat-window,
+.message-container {
   background-color: #0a1929 !important;
   color: #ffffff !important;
 }
 
 /* Force any remaining inputs to use navy blue */
-:global(.dark-mode) input,
-:global(.dark-mode) select,
-:global(.dark-mode) textarea,
-:global(.dark-mode) button,
-:global(.dark-mode) .input,
-:global(.dark-mode) .textbox,
-:global(.dark-mode) [type="text"],
-:global(.dark-mode) [type="search"],
-:global(.dark-mode) [type="email"],
-:global(.dark-mode) [type="password"] {
+input,
+select,
+textarea,
+button,
+.input,
+.textbox,
+[type="text"],
+[type="search"],
+[type="email"],
+[type="password"] {
   background-color: #0a1929 !important;
   color: #ffffff !important;
 }
 
 /* Update chat styling */
-:global(.dark-mode) .chatContainer {
+.chatContainer {
   background: #0a1929;
 }
 
-:global(.dark-mode) .chatMessageUserMessage {
+.chatMessageUserMessage {
   background-color: #112240;
   color: #ffffff;
 }
 
 /* Update citation panel */
-:global(.dark-mode) .citationPanel {
+.citationPanel {
   background-color: #0a1929;
 }
 
-:global(.dark-mode) .citationPanelContentWrapper {
+.citationPanelContentWrapper {
   background-color: #0a1929;
 }
 
 /* Update code styling */
-:global(.dark-mode) .citationPanelContent code {
+.citationPanelContent code {
   background-color: #112240;
   color: #ffb86c;
 }
 
 /* Update button styling */
-:global(.dark-mode) button {
+button {
   background-color: #0a1929;
   color: #ffffff;
 }
 
-:global(.dark-mode) button:hover {
+button:hover {
   background-color: #112240;
 }
 
 /* Fix inconsistent elements */
-:global(.dark-mode) .chatRoot {
+.chatRoot {
   background-color: #0a1929 !important;
 }
 
-:global(.dark-mode) .container {
+.container {
   background-color: #0a1929 !important;
 }
 
-:global(.dark-mode) .citationPanel {
-  background-color: #0a1929 !important;
-  border: none;
-  box-shadow: none;
-}
-
-:global(.dark-mode) .citationPanelContentWrapper {
+.citationPanel {
   background-color: #0a1929 !important;
   border: none;
   box-shadow: none;
 }
 
-:global(.dark-mode) .citationCard {
+.citationPanelContentWrapper {
+  background-color: #0a1929 !important;
+  border: none;
+  box-shadow: none;
+}
+
+.citationCard {
   background-color: #0a1929 !important;
   border-color: #394176;
 }
 
 /* Make sure dialog boxes are navy blue */
-:global(.dark-mode) [role="dialog"],
-:global(.dark-mode) .modal,
-:global(.dark-mode) .popup {
+[role="dialog"],
+.modal,
+.popup {
   background-color: #0a1929 !important;
   color: #ffffff !important;
 }
 
 /* Ensure buttons and icons have proper contrasting colors */
-:global(.dark-mode) svg,
-:global(.dark-mode) .icon {
-  color: #ffffff !important;
-}
-
-/* Ensure main container backgrounds are correct */
-:global(.dark-mode) body,
-:global(.dark-mode) html,
-:global(.dark-mode) #root,
-:global(.dark-mode) .app {
-  background-color: #0a1929 !important;
-  color: #ffffff !important;
-}
-
-/* Add navy blue styling for any specifically targeted elements */
-:global(.dark-mode) .top-search-box,
-:global(.dark-mode) .query-input-container input,
-:global(.dark-mode) .header-search,
-:global(.dark-mode) .main-search-box {
-  background-color: #0a1929 !important;
-  color: #ffffff !important;
-}
-
-/* Style dropdown and select elements */
-:global(.dark-mode) select,
-:global(.dark-mode) option,
-:global(.dark-mode) .dropdown,
-:global(.dark-mode) .dropdown-menu {
-  background-color: #0a1929 !important;
-  color: #ffffff !important;
-}
-
-/* Style any footer elements */
-:global(.dark-mode) footer,
-:global(.dark-mode) .footer {
-  background-color: #0a1929 !important;
+svg,
+.icon {
   color: #ffffff !important;
 }
 
 /* Style the main chat message content area */
-:global(.dark-mode) .chatMessageGpt {
+.chatMessageGpt {
   background-color: #0a1929 !important;
   color: #ffffff !important;
   border-radius: 8px;
@@ -1938,29 +1590,29 @@ button:hover {
 }
 
 /* Style the actual content within the message */
-:global(.dark-mode) .chatMessageGpt p,
-:global(.dark-mode) .chatMessageGpt div,
-:global(.dark-mode) .chatMessageGpt span,
-:global(.dark-mode) .chatMessageGpt li,
-:global(.dark-mode) .chatMessageGpt ul,
-:global(.dark-mode) .chatMessageGpt ol {
+.chatMessageGpt p,
+.chatMessageGpt div,
+.chatMessageGpt span,
+.chatMessageGpt li,
+.chatMessageGpt ul,
+.chatMessageGpt ol {
   color: #ffffff !important;
 }
 
 /* Style the main chat content area for GPT responses */
-:global(.dark-mode) .message-content,
-:global(.dark-mode) .ai-message,
-:global(.dark-mode) .markdown-content,
-:global(.dark-mode) .answer-content {
+.message-content,
+.ai-message,
+.markdown-content,
+.answer-content {
   background-color: #0a1929 !important;
   color: #ffffff !important;
 }
 
 /* Target the specific message content shown in the screenshot */
-:global(.dark-mode) .answer,
-:global(.dark-mode) .chat-message-content,
-:global(.dark-mode) .chat-message-container,
-:global(.dark-mode) .ai-response {
+.answer,
+.chat-message-content,
+.chat-message-container,
+.ai-response {
   background-color: #0a1929 !important;
   color: #ffffff !important;
   border-radius: 8px;
@@ -1968,118 +1620,118 @@ button:hover {
 }
 
 /* Style any links or references in the content */
-:global(.dark-mode) .chatMessageGpt a,
-:global(.dark-mode) .message-content a {
+.chatMessageGpt a,
+.message-content a {
   color: #5aa0ff !important;
   text-decoration: underline;
 }
 
 /* Style numbered reference buttons */
-:global(.dark-mode) [class*="citation-button"],
-:global(.dark-mode) [class*="reference-button"],
-:global(.dark-mode) .reference,
-:global(.dark-mode) .citation-number {
+[class*="citation-button"],
+[class*="reference-button"],
+.reference,
+.citation-number {
   background-color: #112240 !important;
   color: #ffffff !important;
   border: 1px solid #394176 !important;
 }
 
 /* Add these additional selectors to target the main chat area precisely */
-:global(.dark-mode) .chat-response,
-:global(.dark-mode) .gpt-message,
-:global(.dark-mode) .message-body,
-:global(.dark-mode) .response-content,
-:global(.dark-mode) .answer-body,
-:global(.dark-mode) .chat-answer {
+.chat-response,
+.gpt-message,
+.message-body,
+.response-content,
+.answer-body,
+.chat-answer {
   background-color: #0a1929 !important;
   color: #ffffff !important;
   border-radius: 8px;
 }
 
 /* Target the white message box in the screenshot specifically */
-:global(.dark-mode) [role="region"],
-:global(.dark-mode) article.message,
-:global(.dark-mode) .message-wrapper {
+[role="region"],
+article.message,
+.message-wrapper {
   background-color: #0a1929 !important;
   color: #ffffff !important;
 }
 
 /* Target any specific text styles within the message */
-:global(.dark-mode) strong,
-:global(.dark-mode) b,
-:global(.dark-mode) h1, 
-:global(.dark-mode) h2, 
-:global(.dark-mode) h3, 
-:global(.dark-mode) h4, 
-:global(.dark-mode) h5, 
-:global(.dark-mode) h6 {
+strong,
+b,
+h1, 
+h2, 
+h3, 
+h4, 
+h5, 
+h6 {
   color: #ffffff !important;
 }
 
 /* Target list markers and numbers */
-:global(.dark-mode) li::marker {
+li::marker {
   color: #ffffff !important;
 }
 
 /* Style actual message components */
-:global(.dark-mode) .markdown-body {
+.markdown-body {
   background-color: #0a1929 !important;
   color: #ffffff !important;
 }
 
 /* Target the specific element that contains the white background content area shown in the screenshot */
-:global(.dark-mode) .message-container,
-:global(.dark-mode) .message-body-container,
-:global(.dark-mode) .message-wrapper,
-:global(.dark-mode) .gpt-response,
-:global(.dark-mode) .chat-message-bubble,
-:global(.dark-mode) .bubble,
-:global(.dark-mode) .conversation-message,
-:global(.dark-mode) .conversation-gpt-message {
+.message-container,
+.message-body-container,
+.message-wrapper,
+.gpt-response,
+.chat-message-bubble,
+.bubble,
+.conversation-message,
+.conversation-gpt-message {
   background-color: #0a1929 !important;
   color: #ffffff !important;
 }
 
 /* Target the numbered reference buttons in the conversation */
-:global(.dark-mode) span[class*="reference"],
-:global(.dark-mode) span[class*="citation"],
-:global(.dark-mode) button.citation-btn,
-:global(.dark-mode) .reference-number,
-:global(.dark-mode) .citation-marker {
+span[class*="reference"],
+span[class*="citation"],
+button.citation-btn,
+.reference-number,
+.citation-marker {
   background-color: #112240 !important;
   color: #ffffff !important;
   border: 1px solid #394176 !important;
 }
 
 /* Force white elements to be navy blue */
-:global(.dark-mode) div,
-:global(.dark-mode) article,
-:global(.dark-mode) section {
+div,
+article,
+section {
   background-color: #0a1929 !important;
 }
 
 /* Target chat bubbles and message areas */
-:global(.dark-mode) .message,
-:global(.dark-mode) .message-content,
-:global(.dark-mode) .content,
-:global(.dark-mode) .bubble,
-:global(.dark-mode) .chat-bubble {
+.message,
+.message-content,
+.content,
+.bubble,
+.chat-bubble {
   background-color: #0a1929 !important;
   color: #ffffff !important;
 }
 
 /* Give secondary elements a slightly different shade */
-:global(.dark-mode) .chat-footer,
-:global(.dark-mode) .chat-header,
-:global(.dark-mode) .toolbar,
-:global(.dark-mode) .controls {
+.chat-footer,
+.chat-header,
+.toolbar,
+.controls {
   background-color: #112240 !important;
 }
 
 /* Target the main white area in the screenshot */
-:global(.dark-mode) .chat-content-wrapper,
-:global(.dark-mode) .responses-container,
-:global(.dark-mode) .ai-message-container {
+.chat-content-wrapper,
+.responses-container,
+.ai-message-container {
   background-color: #0a1929 !important;
   color: #ffffff !important;
 }
