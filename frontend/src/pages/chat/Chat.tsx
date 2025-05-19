@@ -182,14 +182,21 @@ const Chat = () => {
     }
   }
 
+  // Helper to always get a string from question
+  function extractQuestionText(question: any): string {
+    if (typeof question === 'string') return question;
+    if (Array.isArray(question) && question[0]?.text) return question[0].text;
+    return '';
+  }
+
   const makeApiRequestWithoutCosmosDB = async (question: ChatMessage["content"], conversationId?: string) => {
     setIsLoading(true)
     setShowLoadingMessage(true)
     const abortController = new AbortController()
     abortFuncs.current.unshift(abortController)
 
-    const questionContent = typeof question === 'string' ? question : [{ type: "text", text: question[0].text }, { type: "image_url", image_url: { url: question[1].image_url.url } }]
-    question = typeof question !== 'string' && question[0]?.text?.length > 0 ? question[0].text : question
+    const questionText = extractQuestionText(question);
+    const questionContent = typeof question === 'string' ? questionText : [{ type: "text", text: questionText }]
 
     const userMessage: ChatMessage = {
       id: uuid(),
@@ -202,7 +209,7 @@ const Chat = () => {
     if (!conversationId) {
       conversation = {
         id: conversationId ?? uuid(),
-        title: question as string,
+        title: questionText,
         messages: [userMessage],
         date: new Date().toISOString()
       }
@@ -308,27 +315,15 @@ const Chat = () => {
 
     // After answer is received and setMessages is called:
     // Fetch follow-up questions
-    if (typeof question === 'string') {
-      const followUps = await fetchFollowUps(question)
-      setQaPairs(prev => [
-        ...prev,
-        {
-          question: question,
-          answer: typeof assistantMessage.content === 'string' ? assistantMessage.content : '',
-          followUps
-        }
-      ])
-    } else if (Array.isArray(question) && question[0]?.text) {
-      const followUps = await fetchFollowUps(question[0].text)
-      setQaPairs(prev => [
-        ...prev,
-        {
-          question: question[0].text,
-          answer: typeof assistantMessage.content === 'string' ? assistantMessage.content : '',
-          followUps
-        }
-      ])
-    }
+    const followUps = await fetchFollowUps(questionText)
+    setQaPairs(prev => [
+      ...prev,
+      {
+        question: questionText,
+        answer: typeof assistantMessage.content === 'string' ? assistantMessage.content : '',
+        followUps
+      }
+    ])
 
     return abortController.abort()
   }
@@ -338,8 +333,8 @@ const Chat = () => {
     setShowLoadingMessage(true)
     const abortController = new AbortController()
     abortFuncs.current.unshift(abortController)
-    const questionContent = typeof question === 'string' ? question : [{ type: "text", text: question[0].text }, { type: "image_url", image_url: { url: question[1].image_url.url } }]
-    question = typeof question !== 'string' && question[0]?.text?.length > 0 ? question[0].text : question
+    const questionText = extractQuestionText(question);
+    const questionContent = typeof question === 'string' ? questionText : [{ type: "text", text: questionText }]
 
     const userMessage: ChatMessage = {
       id: uuid(),
@@ -561,27 +556,15 @@ const Chat = () => {
 
     // After answer is received and setMessages is called:
     // Fetch follow-up questions
-    if (typeof question === 'string') {
-      const followUps = await fetchFollowUps(question)
-      setQaPairs(prev => [
-        ...prev,
-        {
-          question: question,
-          answer: typeof assistantMessage.content === 'string' ? assistantMessage.content : '',
-          followUps
-        }
-      ])
-    } else if (Array.isArray(question) && question[0]?.text) {
-      const followUps = await fetchFollowUps(question[0].text)
-      setQaPairs(prev => [
-        ...prev,
-        {
-          question: question[0].text,
-          answer: typeof assistantMessage.content === 'string' ? assistantMessage.content : '',
-          followUps
-        }
-      ])
-    }
+    const followUps = await fetchFollowUps(questionText)
+    setQaPairs(prev => [
+      ...prev,
+      {
+        question: questionText,
+        answer: typeof assistantMessage.content === 'string' ? assistantMessage.content : '',
+        followUps
+      }
+    ])
 
     return abortController.abort()
   }
