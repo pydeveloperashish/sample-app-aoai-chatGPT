@@ -53,7 +53,6 @@ const Chat = () => {
   const chatMessageStreamEnd = useRef<HTMLDivElement | null>(null)
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [showLoadingMessage, setShowLoadingMessage] = useState<boolean>(false)
-  const [activeCitation, setActiveCitation] = useState<Citation>()
   const [isCitationPanelOpen, setIsCitationPanelOpen] = useState<boolean>(false)
   const [isIntentsPanelOpen, setIsIntentsPanelOpen] = useState<boolean>(false)
   const abortFuncs = useRef([] as AbortController[])
@@ -585,7 +584,6 @@ const Chat = () => {
           payload: appStateContext?.state.currentChat.id
         })
         appStateContext?.dispatch({ type: 'UPDATE_CHAT_HISTORY', payload: appStateContext?.state.currentChat })
-        setActiveCitation(undefined)
         setIsCitationPanelOpen(false)
         setIsIntentsPanelOpen(false)
         setMessages([])
@@ -650,7 +648,6 @@ const Chat = () => {
     setMessages([])
     setIsCitationPanelOpen(false)
     setIsIntentsPanelOpen(false)
-    setActiveCitation(undefined)
     appStateContext?.dispatch({ type: 'UPDATE_CURRENT_CHAT', payload: null })
     setProcessMessages(messageStatus.Done)
   }
@@ -733,82 +730,30 @@ const Chat = () => {
   }, [showLoadingMessage, processMessages])
 
   const onShowCitation = (citation: Citation) => {
-    // Ensure the citation has the full_content and highlight_text properties
-    if (!citation.full_content) {
-      citation.full_content = citation.content;
-    }
-    if (!citation.highlight_text) {
-      citation.highlight_text = citation.content;
-    }
-
-    // Process metadata to extract title and page information if not already present
-    if (citation.metadata && (!citation.title || !citation.page)) {
+    // Instead of showing the citation panel, directly open the source document
+    if (citation.url) {
+      // If URL exists, open it directly
+      window.open(citation.url, '_blank');
+    } else if (citation.filepath) {
+      // Try to construct a URL from filepath if possible
       try {
-        const metadata = JSON.parse(citation.metadata);
-        
-        // Get title from metadata if available
-        if (metadata.title && !citation.title) {
-          citation.title = metadata.title;
-        }
-        
-        // Get page information
-        if (metadata.page && !citation.page) {
-          citation.page = metadata.page;
-        }
+        // If the filepath is a relative path, try to open it
+        const url = new URL(citation.filepath, window.location.origin).toString();
+        window.open(url, '_blank');
       } catch (e) {
-        console.error('Error parsing citation metadata:', e);
-      }
-    }
-    
-    // If we still don't have a title, try to extract it from filepath or content
-    if (!citation.title) {
-      if (citation.filepath) {
-        // Extract filename from filepath
-        const filepathParts = citation.filepath.split(/[/\\]/);
-        const filename = filepathParts[filepathParts.length - 1];
+        console.error('Error opening citation source:', e);
         
-        // Remove file extension if present and use as title
-        citation.title = filename ? filename.replace(/\.\w+$/, '') : "Document";
-      } else {
-        // Try to extract title from first line of content
-        const firstLine = citation.content.split('\n')[0].trim();
-        if (firstLine && firstLine.length > 5 && firstLine.length < 100) {
-          citation.title = firstLine;
-        } else {
-          citation.title = "Document";
-        }
+        // Show an alert if we can't determine how to open the document
+        alert(`Unable to open document: ${citation.filepath}`);
       }
+    } else {
+      // If no URL or filepath is available, show an alert
+      alert('Source document not available');
     }
-    
-    // Ensure page information is present
-    if (!citation.page) {
-      citation.page = "1";
-    }
-    
-    // Update the citation with our enhanced data
-    setActiveCitation(citation);
-    setIsCitationPanelOpen(true);
-    setIsIntentsPanelOpen(false);
-    
-    // Add a timeout to ensure the citation panel is rendered and then scroll to the highlighted text
-    setTimeout(() => {
-      if (citationContentRef.current) {
-        const highlightedElement = citationContentRef.current.querySelector(`.${styles.highlightCitation}`);
-        if (highlightedElement) {
-          highlightedElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-      }
-    }, 300); // 300ms delay to ensure panel transition and rendering is complete
   }
 
   const onShowExecResult = (answerId: string) => {
     setIsIntentsPanelOpen(true)
-  }
-
-  const onViewSource = (citation: Citation) => {
-    if (citation.url && !citation.url.includes('blob.core')) {
-      window.open(citation.url, '_blank')
-    }
   }
 
   const parseCitationFromMessage = (message: ChatMessage) => {
@@ -1208,68 +1153,6 @@ const Chat = () => {
               />
             </Stack>
           </div>
-          {/* Citation Panel */}
-          {messages && messages.length > 0 && isCitationPanelOpen && activeCitation && (
-            <Stack.Item className={styles.citationPanel} tabIndex={0} role="tabpanel" aria-label="Citations Panel">
-              <Stack
-                aria-label="Citations Panel Header Container"
-                horizontal
-                className={styles.citationPanelHeaderContainer}
-                horizontalAlign="space-between"
-                verticalAlign="center">
-                <span aria-label="Citations" className={styles.citationPanelHeader}>
-                  Citations
-                </span>
-                <IconButton
-                  iconProps={{ iconName: 'Cancel' }}
-                  aria-label="Close citations panel"
-                  onClick={() => setIsCitationPanelOpen(false)}
-                />
-              </Stack>
-              <div className={styles.citationCard}>
-                <FontIcon iconName="DocumentSearch" className={styles.citationCardIcon} />
-                <div style={{ flex: 1 }}>
-                  <h5 className={styles.citationPanelTitle} tabIndex={0} onClick={() => onViewSource(activeCitation)}>
-                    Source document
-                  </h5>
-                  <div className={styles.citationPanelDocTitle}>
-                    {activeCitation.title || "Document"}
-                  </div>
-                  {activeCitation.page && (
-                    <div className={styles.citationPanelDocInfo}>
-                      Page {activeCitation.page}
-                    </div>
-                  )}
-                  <h6 className={styles.citationPanelSectionTitle}>Overview</h6>
-                  <div tabIndex={0} className={styles.citationPanelContentWrapper} ref={citationContentRef}>
-                    {activeCitation.full_content ? (
-                      <ReactMarkdown
-                        linkTarget="_blank"
-                        className={styles.citationPanelContent}
-                        children={DOMPurify.sanitize(
-                          highlightTextInContent(
-                            activeCitation.full_content,
-                            activeCitation.highlight_text || activeCitation.content
-                          ),
-                          { ALLOWED_TAGS: [...XSSAllowTags, 'span'] }
-                        )}
-                        remarkPlugins={[remarkGfm]}
-                        rehypePlugins={[rehypeRaw]}
-                      />
-                    ) : (
-                      <ReactMarkdown
-                        linkTarget="_blank"
-                        className={styles.citationPanelContent}
-                        children={DOMPurify.sanitize(activeCitation.content, { ALLOWED_TAGS: XSSAllowTags })}
-                        remarkPlugins={[remarkGfm]}
-                        rehypePlugins={[rehypeRaw]}
-                      />
-                    )}
-                  </div>
-                </div>
-              </div>
-            </Stack.Item>
-          )}
           {messages && messages.length > 0 && isIntentsPanelOpen && (
             <Stack.Item className={styles.citationPanel} tabIndex={0} role="tabpanel" aria-label="Intents Panel">
               <Stack

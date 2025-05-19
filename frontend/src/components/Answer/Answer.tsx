@@ -290,82 +290,21 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked, follow
       const citation = parsedAnswer?.citations.find(c => c.reindex_id === citationText)
       const isActive = citation && citation.id === activeCitationId
       
-      // When clicked, this will highlight the citation in the answer text
+      // When clicked, this will now open the source document directly
       const handleCitationClick = () => {
         setActiveCitationId(citation?.id || null)
         if (citation) {
-          // Mark this citation as active
-          const enhancedCitation = { ...citation, active: true }
-          
-          // Ensure the citation has proper highlight text
-          if (!enhancedCitation.highlight_text) {
-            enhancedCitation.highlight_text = enhancedCitation.content
-          }
-          
-          // If there's no full content, use the content as full content
-          if (!enhancedCitation.full_content) {
-            enhancedCitation.full_content = enhancedCitation.content
-          }
-          
-          // Extract metadata including title and page information
-          if (enhancedCitation.metadata) {
-            try {
-              const metadata = JSON.parse(enhancedCitation.metadata)
-              
-              // Extract page information
-              if (metadata.page) {
-                enhancedCitation.page = metadata.page
-              }
-              
-              // Extract title information, if available
-              if (metadata.title && !enhancedCitation.title) {
-                enhancedCitation.title = metadata.title
-              }
-              
-              // If filepath exists and no title, use the filename as title
-              if (!enhancedCitation.title && enhancedCitation.filepath) {
-                const filepathParts = enhancedCitation.filepath.split(/[/\\]/)
-                const filename = filepathParts[filepathParts.length - 1]
-                if (filename) {
-                  // Remove file extension if present
-                  enhancedCitation.title = filename.replace(/\.\w+$/, '')
-                }
-              }
-            } catch (e) {
-              console.error('Error parsing citation metadata:', e)
-            }
-          }
-          
-          // Set a default page number if none exists
-          if (!enhancedCitation.page) {
-            enhancedCitation.page = "1"
-          }
-          
-          // If we still don't have a title, try to extract it from filepath or use a default
-          if (!enhancedCitation.title) {
-            if (enhancedCitation.filepath) {
-              const filepathParts = enhancedCitation.filepath.split(/[/\\]/)
-              const filename = filepathParts[filepathParts.length - 1]
-              enhancedCitation.title = filename || "Document"
-            } else {
-              // Try to extract a meaningful title from the first line of content
-              const firstLine = enhancedCitation.content.split('\n')[0].trim()
-              if (firstLine && firstLine.length > 5 && firstLine.length < 100) {
-                enhancedCitation.title = firstLine
-              } else {
-                enhancedCitation.title = "Document " + citationText
-              }
-            }
-          }
-          
-          onCitationClicked(enhancedCitation)
+          onCitationClicked(citation)
         }
       }
       
       // Create a tooltip with a preview of the citation content
-      const tooltipContent = citation?.highlight_text 
-        ? <div className={styles.citationTooltip}>{citation.highlight_text.substring(0, 150)}{citation.highlight_text.length > 150 ? '...' : ''}</div>
-        : <div className={styles.citationTooltip}>Click to view citation</div>
+      const tooltipContent = citation?.content 
+        ? <div className={styles.citationTooltip}>
+            {citation.content.substring(0, 150)}{citation.content.length > 150 ? '...' : ''}
+            <div style={{marginTop: '5px', fontStyle: 'italic'}}>Click to open source document</div>
+          </div>
+        : <div className={styles.citationTooltip}>Click to open source document</div>
       
       return (
         <TooltipHost
@@ -375,11 +314,11 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked, follow
           calloutProps={{ gapSpace: 0 }}
         >
           <sup
-            className={isActive ? styles.activeCitation : styles.clickableSup}
+            className={styles.clickableSup}
             style={{ cursor: 'pointer' }}
             onClick={handleCitationClick}
             role="button"
-            aria-label={`Citation ${citationText}`}
+            aria-label={`Citation ${citationText} - Click to open source`}
             tabIndex={0}
           >
             {citationText}
@@ -458,8 +397,8 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked, follow
                     role="button">
                     <span>
                       {parsedAnswer.citations.length > 1
-                        ? parsedAnswer.citations.length + ' references'
-                        : '1 reference'}
+                        ? parsedAnswer.citations.length + ' reference sources'
+                        : '1 reference source'}
                     </span>
                   </Text>
                   <FontIcon
@@ -504,36 +443,22 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked, follow
               const isActive = citation.id === activeCitationId;
               return (
                 <span
-                  title={createCitationFilepath(citation, ++idx)}
+                  title={`Open source document: ${createCitationFilepath(citation, ++idx)}`}
                   tabIndex={0}
                   role="link"
                   key={idx}
                   onClick={() => {
                     setActiveCitationId(citation.id)
-                    // Ensure the citation has highlight_text and full_content
-                    const enhancedCitation = { 
-                      ...citation, 
-                      active: true,
-                      highlight_text: citation.highlight_text || citation.content,
-                      full_content: citation.full_content || citation.content
-                    }
-                    onCitationClicked(enhancedCitation)
+                    onCitationClicked(citation)
                   }}
                   onKeyDown={e => {
                     if (e.key === 'Enter' || e.key === ' ') {
-                      // Ensure the citation has highlight_text and full_content
-                      const enhancedCitation = { 
-                        ...citation, 
-                        active: true,
-                        highlight_text: citation.highlight_text || citation.content,
-                        full_content: citation.full_content || citation.content
-                      }
-                      onCitationClicked(enhancedCitation)
+                      onCitationClicked(citation)
                     }
                   }}
-                  className={isActive ? styles.activeCitationContainer : styles.citationContainer}
-                  aria-label={createCitationFilepath(citation, idx)}>
-                  <div className={isActive ? styles.activeCitationNumber : styles.citation}>{idx}</div>
+                  className={styles.citationContainer}
+                  aria-label={`Open source document: ${createCitationFilepath(citation, idx)}`}>
+                  <div className={styles.citation}>{idx}</div>
                   {createCitationFilepath(citation, idx, true)}
                 </span>
               )
