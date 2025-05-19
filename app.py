@@ -1980,4 +1980,32 @@ async def debug_feedback():
         return jsonify({"error": str(e)}), 500
 
 
+@bp.route("/api/similar-questions", methods=["GET"])
+async def similar_questions():
+    query = request.args.get("query", "")
+    if not query:
+        return jsonify([])
+
+    # Wait for Cosmos DB to be ready
+    await cosmos_db_ready.wait()
+    cosmos_client = current_app.cosmos_conversation_client
+
+    # Get all user questions from Cosmos DB
+    questions = []
+    async for item in cosmos_client.container_client.query_items(
+        query="SELECT c.id, c.content FROM c WHERE c.type='message' AND c.role='user'",
+        enable_cross_partition_query=True
+    ):
+        questions.append(item)
+
+    # Find similar questions (simple substring match for now)
+    def is_similar(q):
+        return query.lower() in q['content'].lower()
+    similar = [q for q in questions if is_similar(q)]
+
+    # Return up to 3 similar questions (1-3, not always 3)
+    result = [{"id": q["id"], "text": q["content"]} for q in similar[:3]]
+    return jsonify(result)
+
+
 app = create_app()
