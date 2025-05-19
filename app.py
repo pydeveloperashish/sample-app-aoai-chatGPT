@@ -2005,9 +2005,9 @@ async def similar_questions():
         questions = []
         try:
             logger.info("Executing query to find user messages...")
+            # Remove the problematic parameter
             async for item in cosmos_client.container_client.query_items(
-                query="SELECT c.id, c.content FROM c WHERE c.type='message' AND c.role='user'",
-                enable_cross_partition_query=True
+                query="SELECT c.id, c.content FROM c WHERE c.type='message' AND c.role='user'"
             ):
                 questions.append(item)
             
