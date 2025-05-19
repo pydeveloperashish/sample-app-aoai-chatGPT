@@ -1983,33 +1983,61 @@ async def debug_feedback():
 @bp.route("/api/similar-questions", methods=["GET"])
 async def similar_questions():
     query = request.args.get("query", "")
+    logger.info(f"Similar questions endpoint called with query: '{query}'")
+    
     if not query:
+        logger.info("Empty query received, returning empty results")
         return jsonify([])
 
-    # Wait for Cosmos DB to be ready
-    await cosmos_db_ready.wait()
-    cosmos_client = current_app.cosmos_conversation_client
+    try:
+        # Wait for Cosmos DB to be ready
+        logger.info("Waiting for Cosmos DB to be ready...")
+        await cosmos_db_ready.wait()
+        
+        if not current_app.cosmos_conversation_client:
+            logger.error("CosmosDB client is not initialized")
+            return jsonify({"error": "Database connection not available"}), 500
+            
+        cosmos_client = current_app.cosmos_conversation_client
+        logger.info(f"CosmosDB client obtained, container: {cosmos_client.container_name}")
 
-    # Get all user questions from Cosmos DB
-    questions = []
-    async for item in cosmos_client.container_client.query_items(
-        query="SELECT c.id, c.content FROM c WHERE c.type='message' AND c.role='user'",
-        enable_cross_partition_query=True
-    ):
-        questions.append(item)
+        # Get all user questions from Cosmos DB
+        questions = []
+        try:
+            logger.info("Executing query to find user messages...")
+            async for item in cosmos_client.container_client.query_items(
+                query="SELECT c.id, c.content FROM c WHERE c.type='message' AND c.role='user'",
+                enable_cross_partition_query=True
+            ):
+                questions.append(item)
+            
+            logger.info(f"Found {len(questions)} total user questions")
+        except Exception as query_error:
+            logger.error(f"Error querying CosmosDB: {str(query_error)}")
+            return jsonify({"error": f"Database query error: {str(query_error)}"}), 500
 
-    # Find similar questions (simple substring match for now)
-    def is_similar(q):
-        return query.lower() in q['content'].lower()
-    similar = [q for q in questions if is_similar(q)]
-
-    # Return up to 3 similar questions (1-3, not always 3)
-    result = [{"id": q["id"], "text": q["content"]} for q in similar[:3]]
-
-    # Add logging for follow up questions
-    logger.info(f"follow up questions: {result}")
-
-    return jsonify(result)
+        # Find similar questions (simple substring match for now)
+        try:
+            def is_similar(q):
+                if not q.get('content'):
+                    return False
+                return query.lower() in q['content'].lower()
+                
+            similar = [q for q in questions if is_similar(q)]
+            logger.info(f"Found {len(similar)} similar questions matching query")
+            
+            # Return up to 3 similar questions (1-3, not always 3)
+            result = [{"id": q["id"], "text": q["content"]} for q in similar[:3]]
+            logger.info(f"Returning {len(result)} follow-up questions: {result}")
+            
+            return jsonify(result)
+        except Exception as proc_error:
+            logger.error(f"Error processing results: {str(proc_error)}")
+            return jsonify({"error": f"Error processing results: {str(proc_error)}"}), 500
+            
+    except Exception as e:
+        logger.exception(f"Unhandled exception in similar_questions: {str(e)}")
+        return jsonify({"error": str(e)}), 500
 
 
 app = create_app()
