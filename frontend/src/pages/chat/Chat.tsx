@@ -306,6 +306,13 @@ const Chat = () => {
       setProcessMessages(messageStatus.Done)
     }
 
+    // After answer is received and setMessages is called:
+    // Fetch follow-up questions
+    if (typeof question === 'string') {
+      const followUps = await fetchFollowUps(question)
+      setQaPairs(prev => [...prev, { question, answer: assistantMessage.content, followUps }])
+    }
+
     return abortController.abort()
   }
 
@@ -534,6 +541,14 @@ const Chat = () => {
       abortFuncs.current = abortFuncs.current.filter(a => a !== abortController)
       setProcessMessages(messageStatus.Done)
     }
+
+    // After answer is received and setMessages is called:
+    // Fetch follow-up questions
+    if (typeof question === 'string') {
+      const followUps = await fetchFollowUps(question)
+      setQaPairs(prev => [...prev, { question, answer: assistantMessage.content, followUps }])
+    }
+
     return abortController.abort()
   }
 
