@@ -2005,6 +2005,10 @@ async def similar_questions():
 
     # Return up to 3 similar questions (1-3, not always 3)
     result = [{"id": q["id"], "text": q["content"]} for q in similar[:3]]
+
+    # Add logging for follow up questions
+    logger.info(f"follow up questions: {result}")
+
     return jsonify(result)
 
 
