@@ -20,9 +20,11 @@ interface Props {
   answer: AskResponse
   onCitationClicked: (citedDocument: Citation) => void
   onExectResultClicked: (answerId: string) => void
+  followUpQuestions?: { id: string, text: string }[]
+  onFollowUpClick?: (q: { id: string, text: string }) => void
 }
 
-export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Props) => {
+export const Answer = ({ answer, onCitationClicked, onExectResultClicked, followUpQuestions, onFollowUpClick }: Props) => {
   const initializeAnswerFeedback = (answer: AskResponse) => {
     if (answer.message_id == undefined) return undefined
     if (answer.feedback == undefined) return undefined
@@ -539,6 +541,22 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
           </div>
         )}
       </Stack>
+      {/* Suggested Follow up Queries section */}
+      {followUpQuestions && followUpQuestions.length > 0 && (
+        <div style={{ marginTop: 24, width: '100%' }}>
+          <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 8 }}>
+            Suggested Follow up Queries
+          </div>
+          <Stack horizontal tokens={{ childrenGap: 12 }}>
+            {followUpQuestions.map((q, idx) => (
+              <DefaultButton key={q.id} onClick={() => onFollowUpClick && onFollowUpClick(q)} style={{ minWidth: 180 }}>
+                {q.text}
+              </DefaultButton>
+            ))}
+          </Stack>
+        </div>
+      )}
+      {/* End follow up section */}
       <Dialog
         onDismiss={() => {
           resetFeedbackDialog()

@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, useContext, useLayoutEffect } from 'react'
+import { useRef, useState, useEffect, useContext, useLayoutEffect, useCallback } from 'react'
 import { CommandBarButton, IconButton, Dialog, DialogType, Stack } from '@fluentui/react'
 import { SquareRegular, ShieldLockRegular, ErrorCircleRegular } from '@fluentui/react-icons'
 import { FontIcon } from '@fluentui/react'
@@ -67,6 +67,7 @@ const Chat = () => {
   const [logo, setLogo] = useState('')
   const [answerId, setAnswerId] = useState<string>('')
   const citationContentRef = useRef<HTMLDivElement | null>(null)
+  const [qaPairs, setQaPairs] = useState<{ question: string, answer: string, followUps: { id: string, text: string }[] }[]>([])
 
   const errorDialogContentProps = {
     type: DialogType.close,
@@ -912,6 +913,35 @@ const Chat = () => {
         return content;
       }
     }
+  }
+
+  // Simulate fetching follow-ups and answer from Cosmos DB
+  const fetchFollowUps = useCallback(async (question: string) => {
+    const res = await fetch(`/api/similar-questions?query=${encodeURIComponent(question)}`);
+    if (!res.ok) return [];
+    return await res.json(); // Should be [{ id, text }, ...]
+  }, []);
+
+  const fetchAnswerFromCosmos = useCallback(async (questionId: string) => {
+    const res = await fetch(`/api/answer/${questionId}`);
+    if (!res.ok) return 'No answer found.';
+    const data = await res.json();
+    return data.answer;
+  }, []);
+
+  // When a new user question is asked
+  const handleUserQuestion = async (question: string) => {
+    // ... existing logic to get answer ...
+    const answer = '...'; // Replace with real answer logic
+    const followUps = await fetchFollowUps(question)
+    setQaPairs(prev => [...prev, { question, answer, followUps }])
+  }
+
+  // When a follow-up is clicked
+  const handleFollowUpClick = async (followUp: { id: string, text: string }) => {
+    const answer = await fetchAnswerFromCosmos(followUp.id)
+    const followUps = await fetchFollowUps(followUp.text)
+    setQaPairs(prev => [...prev, { question: followUp.text, answer, followUps }])
   }
 
   return (
