@@ -310,7 +310,24 @@ const Chat = () => {
     // Fetch follow-up questions
     if (typeof question === 'string') {
       const followUps = await fetchFollowUps(question)
-      setQaPairs(prev => [...prev, { question, answer: assistantMessage.content, followUps }])
+      setQaPairs(prev => [
+        ...prev,
+        {
+          question: question,
+          answer: typeof assistantMessage.content === 'string' ? assistantMessage.content : '',
+          followUps
+        }
+      ])
+    } else if (Array.isArray(question) && question[0]?.text) {
+      const followUps = await fetchFollowUps(question[0].text)
+      setQaPairs(prev => [
+        ...prev,
+        {
+          question: question[0].text,
+          answer: typeof assistantMessage.content === 'string' ? assistantMessage.content : '',
+          followUps
+        }
+      ])
     }
 
     return abortController.abort()
@@ -546,7 +563,24 @@ const Chat = () => {
     // Fetch follow-up questions
     if (typeof question === 'string') {
       const followUps = await fetchFollowUps(question)
-      setQaPairs(prev => [...prev, { question, answer: assistantMessage.content, followUps }])
+      setQaPairs(prev => [
+        ...prev,
+        {
+          question: question,
+          answer: typeof assistantMessage.content === 'string' ? assistantMessage.content : '',
+          followUps
+        }
+      ])
+    } else if (Array.isArray(question) && question[0]?.text) {
+      const followUps = await fetchFollowUps(question[0].text)
+      setQaPairs(prev => [
+        ...prev,
+        {
+          question: question[0].text,
+          answer: typeof assistantMessage.content === 'string' ? assistantMessage.content : '',
+          followUps
+        }
+      ])
     }
 
     return abortController.abort()
