@@ -963,17 +963,47 @@ const Chat = () => {
 
   // When a new user question is asked
   const handleUserQuestion = async (question: string) => {
-    // ... existing logic to get answer ...
-    const answer = '...'; // Replace with real answer logic
+    // No need to make API call here anymore since it's called from QuestionInput
+    
+    // Fetch follow-up questions after receiving the answer
     const followUps = await fetchFollowUps(question)
-    setQaPairs(prev => [...prev, { question, answer, followUps }])
+    
+    // Only update qaPairs with the latest answer from messages
+    if (messages.length > 0) {
+      const latestAnswer = messages[messages.length - 1]
+      const answerContent = typeof latestAnswer.content === 'string' ? latestAnswer.content : ''
+      
+      setQaPairs(prev => [...prev, { 
+        question, 
+        answer: answerContent, 
+        followUps 
+      }])
+    }
   }
 
   // When a follow-up is clicked
   const handleFollowUpClick = async (followUp: { id: string, text: string }) => {
-    const answer = await fetchAnswerFromCosmos(followUp.id)
-    const followUps = await fetchFollowUps(followUp.text)
-    setQaPairs(prev => [...prev, { question: followUp.text, answer, followUps }])
+    // Send the follow-up text as a new question
+    if (appStateContext?.state.isCosmosDBAvailable?.cosmosDB) {
+      await makeApiRequestWithCosmosDB(followUp.text)
+    } else {
+      await makeApiRequestWithoutCosmosDB(followUp.text)
+    }
+    
+    // Get more follow-ups for this question
+    const newFollowUps = await fetchFollowUps(followUp.text)
+    
+    // Update qaPairs with the latest Q&A
+    if (messages.length > 0) {
+      const latestAnswer = messages[messages.length - 1]
+      const answerContent = typeof latestAnswer.content === 'string' ? latestAnswer.content : ''
+      
+      setQaPairs(prev => [...prev, { 
+        question: followUp.text, 
+        answer: answerContent, 
+        followUps: newFollowUps 
+      }])
+    }
   }
 
   return (
@@ -1038,6 +1068,8 @@ const Chat = () => {
                             }}
                             onCitationClicked={c => onShowCitation(c)}
                             onExectResultClicked={() => onShowExecResult(answerId)}
+                            followUpQuestions={qaPairs.length > 0 && index === messages.length - 1 ? qaPairs[qaPairs.length - 1].followUps : []}
+                            onFollowUpClick={handleFollowUpClick}
                           />
                         </div>}
                       </div>
@@ -1159,9 +1191,16 @@ const Chat = () => {
                 placeholder="Ask your question..."
                 disabled={isLoading}
                 onSend={(question, id) => {
+                  // Regular API call
                   appStateContext?.state.isCosmosDBAvailable?.cosmosDB
                     ? makeApiRequestWithCosmosDB(question, id)
                     : makeApiRequestWithoutCosmosDB(question, id)
+                    
+                  // Also fetch follow-up questions for string queries
+                  if (typeof question === 'string') {
+                    // Use setTimeout to ensure this runs after the API call is initiated
+                    setTimeout(() => handleUserQuestion(question), 100);
+                  }
                 }}
                 conversationId={
                   appStateContext?.state.currentChat?.id ? appStateContext?.state.currentChat?.id : undefined

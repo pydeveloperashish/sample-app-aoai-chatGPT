@@ -2040,4 +2040,74 @@ async def similar_questions():
         return jsonify({"error": str(e)}), 500
 
 
+@bp.route("/api/answer/<message_id>", methods=["GET"])
+async def get_answer_by_id(message_id):
+    """
+    Retrieves an assistant answer from CosmosDB by its message ID.
+    """
+    logger.info(f"Answer retrieval endpoint called for message ID: {message_id}")
+    
+    try:
+        # Wait for Cosmos DB to be ready
+        await cosmos_db_ready.wait()
+        
+        if not current_app.cosmos_conversation_client:
+            logger.error("CosmosDB client is not initialized")
+            return jsonify({"error": "Database connection not available"}), 500
+            
+        cosmos_client = current_app.cosmos_conversation_client
+        
+        # Try to get the message directly
+        try:
+            # First try to query for the message
+            query = f"SELECT * FROM c WHERE c.id = '{message_id}'"
+            message = None
+            
+            async for item in cosmos_client.container_client.query_items(query=query):
+                message = item
+                break
+                
+            if not message:
+                logger.error(f"Message with ID {message_id} not found")
+                return jsonify({"error": "Message not found"}), 404
+                
+            # Check if this is a user message
+            if message.get("role") == "user":
+                # Find the response to this user message
+                conversation_id = message.get("conversationId")
+                if not conversation_id:
+                    logger.error(f"Message {message_id} has no conversation ID")
+                    return jsonify({"error": "No conversation ID associated with message"}), 404
+                    
+                # Find the assistant response that follows this user message
+                query = f"""
+                SELECT * FROM c 
+                WHERE c.conversationId = '{conversation_id}' 
+                AND c.role = 'assistant' 
+                AND c.createdAt > '{message.get("createdAt")}'
+                ORDER BY c.createdAt
+                """
+                
+                assistant_message = None
+                async for item in cosmos_client.container_client.query_items(query=query):
+                    assistant_message = item
+                    break
+                    
+                if assistant_message:
+                    return jsonify({"answer": assistant_message.get("content", ""), "id": assistant_message.get("id")})
+                else:
+                    return jsonify({"answer": "No answer found for this question", "id": ""}), 404
+            else:
+                # This is already an assistant message, return it directly
+                return jsonify({"answer": message.get("content", ""), "id": message_id})
+                
+        except Exception as query_error:
+            logger.error(f"Error querying for message {message_id}: {str(query_error)}")
+            return jsonify({"error": f"Database query error: {str(query_error)}"}), 500
+            
+    except Exception as e:
+        logger.exception(f"Unhandled exception in get_answer_by_id: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+
 app = create_app()
