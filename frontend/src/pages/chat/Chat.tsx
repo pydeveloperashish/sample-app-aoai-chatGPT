@@ -1260,30 +1260,31 @@ const Chat = () => {
                       color: '#FFFFFF',
                       background:
                         'radial-gradient(109.81% 107.82% at 100.1% 90.19%, #0F6CBD 33.63%, #2D87C3 70.31%, #8DDDD8 100%)'
-                  },
-                  rootDisabled: {
-                    background: '#F0F0F0'
+                    },
+                    rootDisabled: {
+                      background: '#F0F0F0'
+                    }
+                  }}
+                  className={
+                    appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured
+                      ? styles.clearChatBroom
+                      : styles.clearChatBroomNoCosmos
                   }
-                }}
-                className={
-                  appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured
-                    ? styles.clearChatBroom
-                    : styles.clearChatBroomNoCosmos
-                }
-                iconProps={{ iconName: 'Broom' }}
-                onClick={
-                  appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured
-                    ? clearChat
-                    : newChat
-                }
-                disabled={disabledButton()}
-                aria-label="clear chat button"
-              />
+                  iconProps={{ iconName: 'Broom' }}
+                  onClick={
+                    appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured
+                      ? clearChat
+                      : newChat
+                  }
+                                    disabled={disabledButton()}
+                  aria-label="clear chat button"
+                />
               <Dialog
                 hidden={hideErrorDialog}
                 onDismiss={handleErrorDialogClose}
                 dialogContentProps={errorDialogContentProps}
                 modalProps={modalProps}></Dialog>
+            </Stack>
             </Stack>
             <QuestionInput
               clearOnSend
