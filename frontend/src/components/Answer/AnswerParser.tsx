@@ -126,6 +126,12 @@ export function parseAnswer(answer: AskResponse): ParsedAnswer {
   if (typeof answer.answer !== "string") return null
   let answerText = answer.answer
   const citationLinks = answerText.match(/\[(doc\d\d?\d?)]/g)
+  
+  console.log('Parsing citations from answer:', {
+    answerText: answerText.substring(0, 200) + '...',
+    citationLinks,
+    citations: answer.citations
+  });
 
   const lengthDocN = '[doc'.length
 
@@ -135,7 +141,18 @@ export function parseAnswer(answer: AskResponse): ParsedAnswer {
     // Replacing the links/citations with number
     const citationIndex = link.slice(lengthDocN, link.length - 1)
     const citation = cloneDeep(answer.citations[Number(citationIndex) - 1]) as Citation
+    
+    console.log(`Processing citation ${citationIndex}:`, citation);
+    
     if (!filteredCitations.find(c => c.id === citationIndex) && citation) {
+      // Make sure filepath is properly formatted
+      if (citation.filepath) {
+        // Clean up filepath by removing any data/ or site_pdfs/ prefix
+        // This helps ensure we're just working with the filename
+        citation.filepath = citation.filepath.replace(/^(data|site_pdfs)[\/\\]/, '');
+        console.log(`Normalized filepath: ${citation.filepath}`);
+      }
+      
       // Extract the text around the citation for better highlighting context
       const linkPosition = answerText.indexOf(link)
       const textBeforeLink = answerText.substring(Math.max(0, linkPosition - 100), linkPosition).trim()

@@ -730,11 +730,15 @@ const Chat = () => {
   }, [showLoadingMessage, processMessages])
 
   const onShowCitation = (citation: Citation) => {
-    // Instead of showing the citation panel, directly open the source document
+    console.log('Citation clicked:', citation);
+    
+    // If URL exists, open it directly
     if (citation.url) {
-      // If URL exists, open it directly
       window.open(citation.url, '_blank');
-    } else if (citation.filepath) {
+      return;
+    } 
+    
+    if (citation.filepath) {
       // Extract just the filename from the filepath, regardless of path format
       const filename = citation.filepath.split(/[\/\\]/).pop();
       
@@ -742,15 +746,40 @@ const Chat = () => {
         // Get the base URL from current window location
         const baseUrl = window.location.origin;
         
-        // Construct the full URL to the data file
-        const dataUrl = `${baseUrl}/data/${filename}`;
-        
-        // If page number is available, add it as a fragment to open at specific page
-        const pageParam = citation.page ? `#page=${citation.page}` : '';
-        
-        // Open the PDF in a new tab with the page parameter - directly without checks
-        window.open(`${dataUrl}${pageParam}`, '_blank');
-        console.log(`Opening PDF: ${dataUrl}${pageParam}`);
+        // First try to check if the file exists in the data directory
+        fetch(`/data/${filename}`, { method: 'HEAD' })
+          .then(response => {
+            if (response.ok) {
+              // File exists in data directory
+              const dataUrl = `${baseUrl}/data/${filename}`;
+              const pageParam = citation.page ? `#page=${citation.page}` : '';
+              window.open(`${dataUrl}${pageParam}`, '_blank');
+              console.log(`Opening PDF from data directory: ${dataUrl}${pageParam}`);
+            } else {
+              // Try the site_pdfs directory
+              fetch(`/site_pdfs/${filename}`, { method: 'HEAD' })
+                .then(response => {
+                  if (response.ok) {
+                    // File exists in site_pdfs
+                    const pdfUrl = `${baseUrl}/site_pdfs/${filename}`;
+                    const pageParam = citation.page ? `#page=${citation.page}` : '';
+                    window.open(`${pdfUrl}${pageParam}`, '_blank');
+                    console.log(`Opening PDF from site_pdfs: ${pdfUrl}${pageParam}`);
+                  } else {
+                    console.error(`PDF not found in any directory: ${filename}`);
+                    alert(`Source document not available: ${filename}. Please check if the file exists in data or site_pdfs directory.`);
+                  }
+                })
+                .catch(error => {
+                  console.error('Error checking site_pdfs directory:', error);
+                  alert('Error accessing the PDF document.');
+                });
+            }
+          })
+          .catch(error => {
+            console.error('Error checking data directory:', error);
+            alert('Error accessing the PDF document.');
+          });
       } else {
         console.error('Could not extract filename from filepath:', citation.filepath);
         alert(`Unable to extract filename from: ${citation.filepath}`);

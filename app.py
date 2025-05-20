@@ -87,7 +87,7 @@ def create_app():
                 logger.info(f"Creating data directory: {data_dir}")
                 os.makedirs(data_dir)
             
-            # Check if employee_handbook.pdf exists in data directory
+            # Check for PDFs in the data directory
             handbook_path = os.path.join(data_dir, "employee_handbook.pdf")
             if not os.path.exists(handbook_path):
                 # Look for the file in the site_pdfs directory
@@ -127,37 +127,8 @@ def create_app():
                         logger.info(f"Found and copied {len(found_pdfs)} PDFs: {found_pdfs}")
                     else:
                         logger.warning("No PDF files found in common locations")
-                        # Create a basic placeholder PDF file for testing
-                        try:
-                            from reportlab.pdfgen import canvas
-                            
-                            logger.info("Creating placeholder PDF for testing")
-                            test_pdf_path = os.path.join(data_dir, "test_document.pdf")
-                            c = canvas.Canvas(test_pdf_path)
-                            
-                            # Add some content to the PDF
-                            c.setFont("Helvetica", 20)
-                            c.drawString(100, 750, "Test Document")
-                            c.setFont("Helvetica", 14)
-                            c.drawString(100, 700, "This is a placeholder PDF file created for testing.")
-                            c.drawString(100, 680, "It was generated because no actual PDF files were found.")
-                            c.drawString(100, 650, "Page 1")
-                            c.showPage()
-                            
-                            # Add a second page for testing page navigation
-                            c.setFont("Helvetica", 20)
-                            c.drawString(100, 750, "Test Document - Page 2")
-                            c.setFont("Helvetica", 14)
-                            c.drawString(100, 700, "This is the second page of the test document.")
-                            c.drawString(100, 680, "Used to test citation page navigation.")
-                            c.drawString(100, 650, "Page 2")
-                            c.showPage()
-                            
-                            c.save()
-                            logger.info(f"Created placeholder PDF at {test_pdf_path}")
-                        except Exception as pdf_error:
-                            logger.error(f"Failed to create placeholder PDF: {pdf_error}")
-                            logger.exception("PDF creation error details:")
+                        # Removed test PDF generation code
+                        logger.info("No PDFs found and test PDF generation is disabled.")
             
         except Exception as e:
             logger.error(f"Failed to initialize CosmosDB client: {str(e)}")
@@ -277,6 +248,41 @@ async def serve_data_files(path):
         else:
             # For non-PDF files
             return await send_from_directory("data", path)
+    except Exception as e:
+        logging.exception(f"Error serving file: {path}")
+        return jsonify({"error": f"Error serving file: {str(e)}"}), 500
+
+
+@bp.route("/site_pdfs/<path:path>")
+async def serve_site_pdfs(path):
+    """Serve files from the site_pdfs directory, primarily for PDF viewing."""
+    import os
+    
+    logging.info(f"Attempting to serve file: {path} from site_pdfs directory")
+    
+    # Check if the file exists
+    file_path = os.path.join("site_pdfs", path)
+    if not os.path.exists(file_path):
+        logging.error(f"File not found: {file_path}")
+        return jsonify({"error": f"File not found: {path}"}), 404
+    
+    # Get file size
+    file_size = os.path.getsize(file_path)
+    logging.info(f"File size: {file_size} bytes")
+    
+    try:
+        if path.lower().endswith('.pdf'):
+            logging.info(f"Serving PDF file: {path}")
+            response = await send_from_directory("site_pdfs", path)
+            response.headers['Content-Type'] = 'application/pdf'
+            response.headers['Content-Disposition'] = f'inline; filename="{path}"'
+            response.headers['Content-Length'] = str(file_size)
+            # Add cache headers to improve performance
+            response.headers['Cache-Control'] = 'public, max-age=86400'
+            return response
+        else:
+            # For non-PDF files
+            return await send_from_directory("site_pdfs", path)
     except Exception as e:
         logging.exception(f"Error serving file: {path}")
         return jsonify({"error": f"Error serving file: {str(e)}"}), 500
