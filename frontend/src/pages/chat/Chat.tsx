@@ -735,20 +735,21 @@ const Chat = () => {
       // If URL exists, open it directly
       window.open(citation.url, '_blank');
     } else if (citation.filepath) {
-      // Try to construct a URL from filepath if possible
-      try {
-        // If the filepath is a relative path, try to open it
-        const url = new URL(citation.filepath, window.location.origin).toString();
-        window.open(url, '_blank');
-      } catch (e) {
-        console.error('Error opening citation source:', e);
+      // Construct a URL to the data file
+      const filename = citation.filepath.split('/').pop(); // Get just the filename
+      if (filename) {
+        const dataUrl = `/data/${filename}`;
         
-        // Show an alert if we can't determine how to open the document
+        // If page number is available, add it as a fragment to open at specific page
+        const pageParam = citation.page ? `#page=${citation.page}` : '';
+        window.open(`${dataUrl}${pageParam}`, '_blank');
+      } else {
+        console.error('Could not extract filename from filepath:', citation.filepath);
         alert(`Unable to open document: ${citation.filepath}`);
       }
     } else {
-      // If no URL or filepath is available, show an alert
-      alert('Source document not available');
+      // If no URL or filepath, show an alert
+      alert('Source document not available for this citation.');
     }
   }
 

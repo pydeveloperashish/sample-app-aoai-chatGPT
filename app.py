@@ -147,6 +147,12 @@ async def assets(path):
     return await send_from_directory("static/assets", path)
 
 
+@bp.route("/data/<path:path>")
+async def serve_data_files(path):
+    """Serve files from the data directory, primarily for PDF viewing."""
+    return await send_from_directory("data", path)
+
+
 # Debug settings
 USER_AGENT = "GitHubSampleWebApp/AsyncAzureOpenAI/1.0.0"
 

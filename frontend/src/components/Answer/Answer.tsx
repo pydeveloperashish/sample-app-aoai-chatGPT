@@ -298,32 +298,23 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked, follow
         }
       }
       
-      // Create a tooltip with a preview of the citation content
-      const tooltipContent = citation?.content 
-        ? <div className={styles.citationTooltip}>
-            {citation.content.substring(0, 150)}{citation.content.length > 150 ? '...' : ''}
-            <div style={{marginTop: '5px', fontStyle: 'italic'}}>Click to open source document</div>
-          </div>
-        : <div className={styles.citationTooltip}>Click to open source document</div>
-      
+      // Make it look like a clickable citation
       return (
-        <TooltipHost
-          content={tooltipContent}
-          delay={1}
-          id={`citation-tooltip-${citation?.id}`}
-          calloutProps={{ gapSpace: 0 }}
+        <sup
+          className={styles.clickableSup}
+          onClick={handleCitationClick}
+          title="Click to view source document"
+          role="button"
+          tabIndex={0}
+          aria-label={`Citation ${citationText}`}
+          onKeyDown={e => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              handleCitationClick()
+            }
+          }}
         >
-          <sup
-            className={styles.clickableSup}
-            style={{ cursor: 'pointer' }}
-            onClick={handleCitationClick}
-            role="button"
-            aria-label={`Citation ${citationText} - Click to open source`}
-            tabIndex={0}
-          >
-            {citationText}
-          </sup>
-        </TooltipHost>
+          {props.children}
+        </sup>
       )
     }
   }
@@ -441,26 +432,25 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked, follow
           <div className={styles.citationWrapper}>
             {parsedAnswer?.citations.map((citation, idx) => {
               const isActive = citation.id === activeCitationId;
+              const citationFilename = createCitationFilepath(citation, ++idx)
               return (
-                <span
-                  title={`Open source document: ${createCitationFilepath(citation, ++idx)}`}
+                <div
+                  className={styles.citationContainer}
+                  onClick={() => onCitationClicked(citation)}
+                  aria-label={`Citation ${idx}: ${citationFilename}`}
+                  role="button"
                   tabIndex={0}
-                  role="link"
-                  key={idx}
-                  onClick={() => {
-                    setActiveCitationId(citation.id)
-                    onCitationClicked(citation)
-                  }}
                   onKeyDown={e => {
                     if (e.key === 'Enter' || e.key === ' ') {
                       onCitationClicked(citation)
                     }
-                  }}
-                  className={styles.citationContainer}
-                  aria-label={`Open source document: ${createCitationFilepath(citation, idx)}`}>
-                  <div className={styles.citation}>{idx}</div>
-                  {createCitationFilepath(citation, idx, true)}
-                </span>
+                  }}>
+                  <div className={styles.citation}>
+                    <FontIcon iconName="DocumentPDF" className={styles.citationIcon} />
+                    <span>{citationFilename}</span>
+                    <span className={styles.viewSourceText}>View Source</span>
+                  </div>
+                </div>
               )
             })}
           </div>
