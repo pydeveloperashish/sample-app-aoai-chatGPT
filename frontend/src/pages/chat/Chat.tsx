@@ -748,16 +748,16 @@ const Chat = () => {
         // If page number is available, add it as a fragment to open at specific page
         const pageParam = citation.page ? `#page=${citation.page}` : '';
         
-        // Open the PDF in a new tab with the page parameter
-        console.log(`Opening PDF: ${dataUrl}${pageParam}`);
+        // Open the PDF in a new tab with the page parameter - directly without checks
         window.open(`${dataUrl}${pageParam}`, '_blank');
+        console.log(`Opening PDF: ${dataUrl}${pageParam}`);
       } else {
         console.error('Could not extract filename from filepath:', citation.filepath);
-        alert(`Unable to open document: ${citation.filepath}`);
+        alert(`Unable to extract filename from: ${citation.filepath}`);
       }
     } else {
-      // If no URL or filepath, show an alert
-      alert('Source document not available for this citation.');
+      console.error('No URL or filepath in citation:', citation);
+      alert('Source document not available for this citation. No URL or filepath provided.');
     }
   }
 

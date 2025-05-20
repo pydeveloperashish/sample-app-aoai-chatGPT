@@ -5,6 +5,7 @@ import logging
 import uuid
 import httpx
 import asyncio
+import shutil
 from quart import (
     Blueprint,
     Quart,
@@ -77,6 +78,87 @@ def create_app():
                 logger.info("cosmos_db_ready event set")
             else:
                 logger.warning("CosmosDB client initialization returned None")
+            
+            # Ensure data directory exists
+            import os
+            
+            data_dir = "data"
+            if not os.path.exists(data_dir):
+                logger.info(f"Creating data directory: {data_dir}")
+                os.makedirs(data_dir)
+            
+            # Check if employee_handbook.pdf exists in data directory
+            handbook_path = os.path.join(data_dir, "employee_handbook.pdf")
+            if not os.path.exists(handbook_path):
+                # Look for the file in the site_pdfs directory
+                site_pdfs_dir = "site_pdfs"
+                site_handbook_path = os.path.join(site_pdfs_dir, "employee_handbook.pdf")
+                
+                if os.path.exists(site_handbook_path):
+                    logger.info(f"Copying {site_handbook_path} to {handbook_path}")
+                    shutil.copy2(site_handbook_path, handbook_path)
+                    logger.info(f"Successfully copied employee handbook PDF to {handbook_path}")
+                else:
+                    logger.warning(f"Employee handbook PDF not found at {site_handbook_path}")
+                    # Search for PDFs in common locations
+                    pdf_locations = [
+                        ".", 
+                        "site_pdfs", 
+                        "data",
+                        "static",
+                        "static/pdfs",
+                        "pdfs"
+                    ]
+                    found_pdfs = []
+                    for location in pdf_locations:
+                        if os.path.exists(location):
+                            for root, dirs, files in os.walk(location):
+                                for file in files:
+                                    if file.lower().endswith(".pdf"):
+                                        pdf_path = os.path.join(root, file)
+                                        found_pdfs.append(pdf_path)
+                                        # Copy the PDF to data directory
+                                        target_path = os.path.join(data_dir, file)
+                                        if not os.path.exists(target_path):
+                                            logger.info(f"Copying {pdf_path} to {target_path}")
+                                            shutil.copy2(pdf_path, target_path)
+                
+                    if found_pdfs:
+                        logger.info(f"Found and copied {len(found_pdfs)} PDFs: {found_pdfs}")
+                    else:
+                        logger.warning("No PDF files found in common locations")
+                        # Create a basic placeholder PDF file for testing
+                        try:
+                            from reportlab.pdfgen import canvas
+                            
+                            logger.info("Creating placeholder PDF for testing")
+                            test_pdf_path = os.path.join(data_dir, "test_document.pdf")
+                            c = canvas.Canvas(test_pdf_path)
+                            
+                            # Add some content to the PDF
+                            c.setFont("Helvetica", 20)
+                            c.drawString(100, 750, "Test Document")
+                            c.setFont("Helvetica", 14)
+                            c.drawString(100, 700, "This is a placeholder PDF file created for testing.")
+                            c.drawString(100, 680, "It was generated because no actual PDF files were found.")
+                            c.drawString(100, 650, "Page 1")
+                            c.showPage()
+                            
+                            # Add a second page for testing page navigation
+                            c.setFont("Helvetica", 20)
+                            c.drawString(100, 750, "Test Document - Page 2")
+                            c.setFont("Helvetica", 14)
+                            c.drawString(100, 700, "This is the second page of the test document.")
+                            c.drawString(100, 680, "Used to test citation page navigation.")
+                            c.drawString(100, 650, "Page 2")
+                            c.showPage()
+                            
+                            c.save()
+                            logger.info(f"Created placeholder PDF at {test_pdf_path}")
+                        except Exception as pdf_error:
+                            logger.error(f"Failed to create placeholder PDF: {pdf_error}")
+                            logger.exception("PDF creation error details:")
+            
         except Exception as e:
             logger.error(f"Failed to initialize CosmosDB client: {str(e)}")
             logger.exception("Full stack trace for CosmosDB initialization failure")
@@ -150,12 +232,54 @@ async def assets(path):
 @bp.route("/data/<path:path>")
 async def serve_data_files(path):
     """Serve files from the data directory, primarily for PDF viewing."""
-    if path.lower().endswith('.pdf'):
-        response = await send_from_directory("data", path)
-        response.headers['Content-Type'] = 'application/pdf'
-        response.headers['Content-Disposition'] = f'inline; filename="{path}"'
-        return response
-    return await send_from_directory("data", path)
+    import os
+    
+    logging.info(f"Attempting to serve file: {path} from data directory")
+    
+    # Check if the file exists
+    file_path = os.path.join("data", path)
+    if not os.path.exists(file_path):
+        logging.error(f"File not found: {file_path}")
+        # Try to serve from a different directory as a fallback
+        fallback_locations = ["site_pdfs", "static/pdfs", "pdfs"]
+        for location in fallback_locations:
+            alt_path = os.path.join(location, path)
+            if os.path.exists(alt_path):
+                logging.info(f"File found in alternative location: {alt_path}")
+                # If file found at alternative location, make a copy to data dir
+                os.makedirs("data", exist_ok=True)
+                import shutil
+                try:
+                    shutil.copy2(alt_path, file_path)
+                    logging.info(f"File copied from {alt_path} to {file_path}")
+                    break
+                except Exception as e:
+                    logging.error(f"Error copying file: {e}")
+        
+        # If file still doesn't exist after fallback attempts
+        if not os.path.exists(file_path):
+            return jsonify({"error": f"File not found: {path}"}), 404
+    
+    # Get file size
+    file_size = os.path.getsize(file_path)
+    logging.info(f"File size: {file_size} bytes")
+    
+    try:
+        if path.lower().endswith('.pdf'):
+            logging.info(f"Serving PDF file: {path}")
+            response = await send_from_directory("data", path)
+            response.headers['Content-Type'] = 'application/pdf'
+            response.headers['Content-Disposition'] = f'inline; filename="{path}"'
+            response.headers['Content-Length'] = str(file_size)
+            # Add cache headers to improve performance
+            response.headers['Cache-Control'] = 'public, max-age=86400'
+            return response
+        else:
+            # For non-PDF files
+            return await send_from_directory("data", path)
+    except Exception as e:
+        logging.exception(f"Error serving file: {path}")
+        return jsonify({"error": f"Error serving file: {str(e)}"}), 500
 
 
 # Debug settings
@@ -2118,6 +2242,83 @@ async def get_answer_by_id(message_id):
             
     except Exception as e:
         logger.exception(f"Unhandled exception in get_answer_by_id: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+
+@bp.route("/debug/data-files", methods=["GET"])
+async def list_data_files():
+    """Debug endpoint to list all files in the data directory."""
+    import os
+    
+    try:
+        data_dir = "data"
+        # Get all files in the data directory, recursively
+        files = []
+        for root, dirs, filenames in os.walk(data_dir):
+            for filename in filenames:
+                file_path = os.path.join(root, filename)
+                rel_path = os.path.relpath(file_path, data_dir)
+                files.append({
+                    "filename": filename,
+                    "path": rel_path,
+                    "full_path": file_path,
+                    "size": os.path.getsize(file_path),
+                    "type": os.path.splitext(filename)[1].lower(),
+                })
+        
+        return jsonify({
+            "data_dir": os.path.abspath(data_dir),
+            "file_count": len(files),
+            "files": files
+        }), 200
+    except Exception as e:
+        logging.exception("Error listing data files")
+        return jsonify({"error": str(e)}), 500
+
+
+@bp.route("/debug/check-file", methods=["GET"])
+async def check_file_exists():
+    """Debug endpoint to check if a specific file exists."""
+    import os
+    
+    file_path = request.args.get("path", "")
+    if not file_path:
+        return jsonify({"error": "No file path provided. Use ?path=filename.pdf"}), 400
+    
+    # Make sure we don't allow path traversal
+    if ".." in file_path:
+        return jsonify({"error": "Invalid file path"}), 400
+    
+    # Check if path is absolute or relative
+    if os.path.isabs(file_path):
+        full_path = file_path
+    else:
+        # Prepend data directory if relative path
+        if not file_path.startswith("data/"):
+            full_path = os.path.join("data", file_path)
+        else:
+            full_path = file_path
+    
+    try:
+        exists = os.path.exists(full_path)
+        
+        result = {
+            "file_path": file_path,
+            "full_path": full_path,
+            "exists": exists
+        }
+        
+        if exists:
+            result.update({
+                "size": os.path.getsize(full_path),
+                "is_file": os.path.isfile(full_path),
+                "is_dir": os.path.isdir(full_path),
+                "type": os.path.splitext(full_path)[1].lower() if os.path.isfile(full_path) else None
+            })
+        
+        return jsonify(result), 200
+    except Exception as e:
+        logging.exception(f"Error checking file: {file_path}")
         return jsonify({"error": str(e)}), 500
 
 

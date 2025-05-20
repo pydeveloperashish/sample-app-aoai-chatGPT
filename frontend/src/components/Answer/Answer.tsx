@@ -291,9 +291,13 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked, follow
       
       // When clicked, this will now open the source document directly
       const handleCitationClick = () => {
-        setActiveCitationId(citation?.id || null)
         if (citation) {
-          onCitationClicked(citation)
+          // First set the active citation ID, then trigger the click handler
+          setActiveCitationId(citation.id)
+          // Give a small delay to ensure state is updated before calling the handler
+          setTimeout(() => {
+            onCitationClicked(citation)
+          }, 10)
         }
       }
       
@@ -435,13 +439,21 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked, follow
               return (
                 <div
                   className={styles.citationContainer}
-                  onClick={() => onCitationClicked(citation)}
+                  onClick={() => {
+                    // First set the active citation ID, then trigger the click handler
+                    setActiveCitationId(citation.id); 
+                    // Small delay to ensure state is updated
+                    setTimeout(() => onCitationClicked(citation), 10);
+                  }}
                   aria-label={`Open PDF: ${citationFilename}`}
                   role="button"
                   tabIndex={0}
                   onKeyDown={e => {
                     if (e.key === 'Enter' || e.key === ' ') {
-                      onCitationClicked(citation)
+                      // First set the active citation ID, then trigger the click handler
+                      setActiveCitationId(citation.id);
+                      // Small delay to ensure state is updated
+                      setTimeout(() => onCitationClicked(citation), 10);
                     }
                   }}>
                   <div className={styles.citation}>
