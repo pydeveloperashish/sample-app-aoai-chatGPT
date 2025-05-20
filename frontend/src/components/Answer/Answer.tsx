@@ -303,12 +303,12 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked, follow
       
       // Make it look like a clickable citation
       return (
-        <sup
+          <sup
           className={styles.clickableSup}
-          onClick={handleCitationClick}
+            onClick={handleCitationClick}
           title="Click to open PDF source document"
-          role="button"
-          tabIndex={0}
+            role="button"
+            tabIndex={0}
           aria-label={`Open PDF source for citation ${citationText}`}
           onKeyDown={e => {
             if (e.key === 'Enter' || e.key === ' ') {
@@ -317,7 +317,7 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked, follow
           }}
         >
           {props.children}
-        </sup>
+          </sup>
       )
     }
   }

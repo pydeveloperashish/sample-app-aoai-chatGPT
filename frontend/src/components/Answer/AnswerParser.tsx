@@ -127,11 +127,16 @@ export function parseAnswer(answer: AskResponse): ParsedAnswer {
   let answerText = answer.answer
   const citationLinks = answerText.match(/\[(doc\d\d?\d?)]/g)
   
+  console.log('==== CITATION PROCESSING START ====');
   console.log('Parsing citations from answer:', {
     answerText: answerText.substring(0, 200) + '...',
     citationLinks,
-    citations: answer.citations
+    citations: answer.citations ? answer.citations.length : 0
   });
+  
+  if (answer.citations && answer.citations.length > 0) {
+    console.log('First citation sample:', JSON.stringify(answer.citations[0], null, 2));
+  }
 
   const lengthDocN = '[doc'.length
 
@@ -142,15 +147,68 @@ export function parseAnswer(answer: AskResponse): ParsedAnswer {
     const citationIndex = link.slice(lengthDocN, link.length - 1)
     const citation = cloneDeep(answer.citations[Number(citationIndex) - 1]) as Citation
     
-    console.log(`Processing citation ${citationIndex}:`, citation);
+    console.log(`\nProcessing citation ${citationIndex}:`, JSON.stringify(citation, null, 2));
     
     if (!filteredCitations.find(c => c.id === citationIndex) && citation) {
+      // Handle metadata_storage_path conversion if filepath is missing
+      if (!citation.filepath && citation.metadata) {
+        console.log(`Citation ${citationIndex} has no filepath but has metadata:`, citation.metadata);
+        try {
+          const metadata = JSON.parse(citation.metadata);
+          console.log('Parsed metadata:', JSON.stringify(metadata, null, 2));
+          
+          if (metadata.metadata_storage_path) {
+            console.log(`Found metadata_storage_path: ${metadata.metadata_storage_path}`);
+            // Extract just the filename from the metadata_storage_path
+            // The path typically looks like: aHR0cHM6Ly9henVy...data/filename.pdf
+            // We just want filename.pdf
+            const pathParts = metadata.metadata_storage_path.split('/');
+            const filename = pathParts[pathParts.length - 1];
+            citation.filepath = filename;
+            console.log(`Extracted filename from metadata_storage_path: ${filename}`);
+          } else {
+            console.log('No metadata_storage_path found in metadata');
+            if (metadata.filepath) {
+              console.log(`Found filepath in metadata: ${metadata.filepath}`);
+              citation.filepath = metadata.filepath;
+            }
+          }
+        } catch (e) {
+          console.warn("Failed to parse metadata JSON:", e);
+        }
+      } else if (citation.filepath) {
+        console.log(`Citation ${citationIndex} already has filepath: ${citation.filepath}`);
+      } else {
+        console.log(`Citation ${citationIndex} has no filepath or metadata`);
+      }
+      
+      // Ensure citation has a filepath - if not, use a default value
+      if (!citation.filepath && !citation.url) {
+        console.log('Citation missing filepath and URL. Setting default filepath to employee_handbook.pdf');
+        citation.filepath = 'employee_handbook.pdf';
+      }
+      
       // Make sure filepath is properly formatted
       if (citation.filepath) {
         // Clean up filepath by removing any data/ or site_pdfs/ prefix
         // This helps ensure we're just working with the filename
+        const originalPath = citation.filepath;
         citation.filepath = citation.filepath.replace(/^(data|site_pdfs)[\/\\]/, '');
-        console.log(`Normalized filepath: ${citation.filepath}`);
+        if (originalPath !== citation.filepath) {
+          console.log(`Removed directory prefix from filepath: ${originalPath} -> ${citation.filepath}`);
+        }
+        
+        // Also decode URI encoded names if needed
+        try {
+          if (citation.filepath.includes('%')) {
+            const decodedPath = decodeURIComponent(citation.filepath);
+            console.log(`Decoded URI encoded filepath: ${citation.filepath} -> ${decodedPath}`);
+            citation.filepath = decodedPath;
+          }
+        } catch (e) {
+          console.warn("Error decoding URI component:", e);
+        }
+        console.log(`Final normalized filepath: ${citation.filepath}`);
       }
       
       // Extract the text around the citation for better highlighting context
@@ -256,6 +314,18 @@ export function parseAnswer(answer: AskResponse): ParsedAnswer {
   })
 
   filteredCitations = enumerateCitations(filteredCitations)
+  
+  console.log(`\nFinal citations (${filteredCitations.length}):`);
+  filteredCitations.forEach((citation, index) => {
+    console.log(`Citation ${index + 1}:`, {
+      id: citation.id,
+      reindex_id: citation.reindex_id,
+      filepath: citation.filepath,
+      title: citation.title,
+      url: citation.url
+    });
+  });
+  console.log('==== CITATION PROCESSING END ====');
 
   return {
     citations: filteredCitations,

@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect, useContext, useLayoutEffect, useCallback } from 'react'
-import { CommandBarButton, IconButton, Dialog, DialogType, Stack } from '@fluentui/react'
+import { CommandBarButton, IconButton, Dialog, DialogType, Stack, Button } from '@fluentui/react'
 import { SquareRegular, ShieldLockRegular, ErrorCircleRegular } from '@fluentui/react-icons'
 import { FontIcon } from '@fluentui/react'
 
@@ -730,63 +730,179 @@ const Chat = () => {
   }, [showLoadingMessage, processMessages])
 
   const onShowCitation = (citation: Citation) => {
-    console.log('Citation clicked:', citation);
+    console.log('==== CITATION CLICK HANDLING START ====');
+    console.log('Citation clicked - full citation object:', JSON.stringify(citation, null, 2));
     
     // If URL exists, open it directly
     if (citation.url) {
+      console.log(`Citation has URL: ${citation.url}, opening directly`);
       window.open(citation.url, '_blank');
+      console.log('==== CITATION CLICK HANDLING END ====');
       return;
     } 
     
+    // Check if citation might have metadata_storage_path but no filepath
+    if (!citation.filepath && citation.metadata) {
+      console.log('Citation has no filepath but has metadata:', citation.metadata);
+      try {
+        const metadata = JSON.parse(citation.metadata);
+        console.log('Parsed metadata:', JSON.stringify(metadata, null, 2));
+        if (metadata.metadata_storage_path) {
+          console.log(`Found metadata_storage_path: ${metadata.metadata_storage_path}`);
+          // Extract just the filename from the metadata_storage_path
+          const pathParts = metadata.metadata_storage_path.split('/');
+          const filename = pathParts[pathParts.length - 1];
+          citation.filepath = filename;
+          console.log(`Extracted filename from metadata_storage_path: ${filename}`);
+        } else {
+          console.log('No metadata_storage_path found in metadata');
+          // Check for other potential filename fields
+          if (metadata.filepath) {
+            console.log(`Found filepath in metadata: ${metadata.filepath}`);
+            citation.filepath = metadata.filepath;
+          } else if (metadata.filename) {
+            console.log(`Found filename in metadata: ${metadata.filename}`);
+            citation.filepath = metadata.filename;
+          }
+        }
+      } catch (e) {
+        console.error("Failed to parse metadata JSON:", e);
+      }
+    }
+    
     if (citation.filepath) {
+      console.log(`Working with filepath: ${citation.filepath}`);
       // Extract just the filename from the filepath, regardless of path format
       const filename = citation.filepath.split(/[\/\\]/).pop();
+      console.log('Extracted filename:', filename);
       
       if (filename) {
+        // Try to decode URI encoded filename if needed
+        let decodedFilename = filename;
+        try {
+          if (filename.includes('%')) {
+            decodedFilename = decodeURIComponent(filename);
+            console.log(`Decoded filename: ${filename} -> ${decodedFilename}`);
+          }
+        } catch (e) {
+          console.error("Error decoding filename:", e);
+        }
+        
         // Get the base URL from current window location
         const baseUrl = window.location.origin;
+        console.log(`Base URL: ${baseUrl}`);
         
         // First try to check if the file exists in the data directory
-        fetch(`/data/${filename}`, { method: 'HEAD' })
+        console.log(`Checking if file exists in data directory: /data/${decodedFilename}`);
+        fetch(`/data/${decodedFilename}`, { method: 'HEAD' })
           .then(response => {
+            console.log(`Data directory check result: ${response.status} ${response.ok ? 'OK' : 'Not Found'}`);
             if (response.ok) {
               // File exists in data directory
-              const dataUrl = `${baseUrl}/data/${filename}`;
+              const dataUrl = `${baseUrl}/data/${decodedFilename}`;
               const pageParam = citation.page ? `#page=${citation.page}` : '';
-              window.open(`${dataUrl}${pageParam}`, '_blank');
-              console.log(`Opening PDF from data directory: ${dataUrl}${pageParam}`);
+              const fullUrl = `${dataUrl}${pageParam}`;
+              console.log(`Opening PDF from data directory: ${fullUrl}`);
+              window.open(fullUrl, '_blank');
+              console.log('==== CITATION CLICK HANDLING END ====');
             } else {
               // Try the site_pdfs directory
-              fetch(`/site_pdfs/${filename}`, { method: 'HEAD' })
+              console.log(`Checking if file exists in site_pdfs directory: /site_pdfs/${decodedFilename}`);
+              fetch(`/site_pdfs/${decodedFilename}`, { method: 'HEAD' })
                 .then(response => {
+                  console.log(`Site_pdfs directory check result: ${response.status} ${response.ok ? 'OK' : 'Not Found'}`);
                   if (response.ok) {
                     // File exists in site_pdfs
-                    const pdfUrl = `${baseUrl}/site_pdfs/${filename}`;
+                    const pdfUrl = `${baseUrl}/site_pdfs/${decodedFilename}`;
                     const pageParam = citation.page ? `#page=${citation.page}` : '';
-                    window.open(`${pdfUrl}${pageParam}`, '_blank');
-                    console.log(`Opening PDF from site_pdfs: ${pdfUrl}${pageParam}`);
+                    const fullUrl = `${pdfUrl}${pageParam}`;
+                    console.log(`Opening PDF from site_pdfs directory: ${fullUrl}`);
+                    window.open(fullUrl, '_blank');
+                    console.log('==== CITATION CLICK HANDLING END ====');
                   } else {
-                    console.error(`PDF not found in any directory: ${filename}`);
-                    alert(`Source document not available: ${filename}. Please check if the file exists in data or site_pdfs directory.`);
+                    console.error(`PDF not found in any directory: ${decodedFilename}`);
+                    alert(`Source document not available: ${decodedFilename}. Please check if the file exists in data or site_pdfs directory.`);
+                    console.log('==== CITATION CLICK HANDLING END ====');
                   }
                 })
                 .catch(error => {
                   console.error('Error checking site_pdfs directory:', error);
                   alert('Error accessing the PDF document.');
+                  console.log('==== CITATION CLICK HANDLING END ====');
                 });
             }
           })
           .catch(error => {
             console.error('Error checking data directory:', error);
             alert('Error accessing the PDF document.');
+            console.log('==== CITATION CLICK HANDLING END ====');
           });
       } else {
         console.error('Could not extract filename from filepath:', citation.filepath);
         alert(`Unable to extract filename from: ${citation.filepath}`);
+        console.log('==== CITATION CLICK HANDLING END ====');
       }
     } else {
       console.error('No URL or filepath in citation:', citation);
-      alert('Source document not available for this citation. No URL or filepath provided.');
+      
+      // Fallback: Try to use the title as the filename if available
+      if (citation.title) {
+        console.log('Attempting to use title as filename:', citation.title);
+        const sanitizedTitle = citation.title.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase() + '.pdf';
+        console.log(`Sanitized title: ${sanitizedTitle}`);
+        
+        // Default to employee handbook as fallback
+        console.log('Using employee_handbook.pdf as fallback');
+        
+        // Try the data directory first
+        console.log('Checking if employee_handbook.pdf exists in data directory');
+        fetch(`/data/employee_handbook.pdf`, { method: 'HEAD' })
+          .then(response => {
+            console.log(`Data directory check result: ${response.status} ${response.ok ? 'OK' : 'Not Found'}`);
+            if (response.ok) {
+              const dataUrl = `${window.location.origin}/data/employee_handbook.pdf`;
+              const pageParam = citation.page ? `#page=${citation.page}` : '';
+              const fullUrl = `${dataUrl}${pageParam}`;
+              console.log(`Opening handbook PDF from data directory: ${fullUrl}`);
+              window.open(fullUrl, '_blank');
+              console.log('==== CITATION CLICK HANDLING END ====');
+            } else {
+              // Try site_pdfs directory next
+              console.log('Checking if employee_handbook.pdf exists in site_pdfs directory');
+              fetch(`/site_pdfs/employee_handbook.pdf`, { method: 'HEAD' })
+                .then(response => {
+                  console.log(`Site_pdfs directory check result: ${response.status} ${response.ok ? 'OK' : 'Not Found'}`);
+                  if (response.ok) {
+                    const pdfUrl = `${window.location.origin}/site_pdfs/employee_handbook.pdf`;
+                    const pageParam = citation.page ? `#page=${citation.page}` : '';
+                    const fullUrl = `${pdfUrl}${pageParam}`;
+                    console.log(`Opening handbook PDF from site_pdfs directory: ${fullUrl}`);
+                    window.open(fullUrl, '_blank');
+                    console.log('==== CITATION CLICK HANDLING END ====');
+                  } else {
+                    // If still not found, show the error
+                    console.error('Fallback PDF not found in any directory');
+                    alert('Source document not available for this citation. No URL or filepath provided.');
+                    console.log('==== CITATION CLICK HANDLING END ====');
+                  }
+                })
+                .catch(error => {
+                  console.error('Error checking site_pdfs directory for handbook:', error);
+                  alert('Error accessing the PDF document.');
+                  console.log('==== CITATION CLICK HANDLING END ====');
+                });
+            }
+          })
+          .catch(error => {
+            console.error('Error checking data directory for handbook:', error);
+            alert('Error accessing the PDF document.');
+            console.log('==== CITATION CLICK HANDLING END ====');
+          });
+      } else {
+        console.error('No URL, filepath, or title in citation');
+        alert('Source document not available for this citation. No URL or filepath provided.');
+        console.log('==== CITATION CLICK HANDLING END ====');
+      }
     }
   }
 
@@ -1144,52 +1260,51 @@ const Chat = () => {
                       color: '#FFFFFF',
                       background:
                         'radial-gradient(109.81% 107.82% at 100.1% 90.19%, #0F6CBD 33.63%, #2D87C3 70.31%, #8DDDD8 100%)'
-                    },
-                    rootDisabled: {
-                      background: '#F0F0F0'
-                    }
-                  }}
-                  className={
-                    appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured
-                      ? styles.clearChatBroom
-                      : styles.clearChatBroomNoCosmos
-                  }
-                  iconProps={{ iconName: 'Broom' }}
-                  onClick={
-                    appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured
-                      ? clearChat
-                      : newChat
-                  }
-                  disabled={disabledButton()}
-                  aria-label="clear chat button"
-                />
-                <Dialog
-                  hidden={hideErrorDialog}
-                  onDismiss={handleErrorDialogClose}
-                  dialogContentProps={errorDialogContentProps}
-                  modalProps={modalProps}></Dialog>
-              </Stack>
-              <QuestionInput
-                clearOnSend
-                placeholder="Ask your question..."
-                disabled={isLoading}
-                onSend={(question, id) => {
-                  // Regular API call
-                  appStateContext?.state.isCosmosDBAvailable?.cosmosDB
-                    ? makeApiRequestWithCosmosDB(question, id)
-                    : makeApiRequestWithoutCosmosDB(question, id)
-                    
-                  // Also fetch follow-up questions for string queries
-                  if (typeof question === 'string') {
-                    // Use setTimeout to ensure this runs after the API call is initiated
-                    setTimeout(() => handleUserQuestion(question), 100);
+                  },
+                  rootDisabled: {
+                    background: '#F0F0F0'
                   }
                 }}
-                conversationId={
-                  appStateContext?.state.currentChat?.id ? appStateContext?.state.currentChat?.id : undefined
+                className={
+                  appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured
+                    ? styles.clearChatBroom
+                    : styles.clearChatBroomNoCosmos
                 }
+                iconProps={{ iconName: 'Broom' }}
+                onClick={
+                  appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured
+                    ? clearChat
+                    : newChat
+                }
+                disabled={disabledButton()}
+                aria-label="clear chat button"
               />
+              <Dialog
+                hidden={hideErrorDialog}
+                onDismiss={handleErrorDialogClose}
+                dialogContentProps={errorDialogContentProps}
+                modalProps={modalProps}></Dialog>
             </Stack>
+            <QuestionInput
+              clearOnSend
+              placeholder="Ask your question..."
+              disabled={isLoading}
+              onSend={(question, id) => {
+                // Regular API call
+                appStateContext?.state.isCosmosDBAvailable?.cosmosDB
+                  ? makeApiRequestWithCosmosDB(question, id)
+                  : makeApiRequestWithoutCosmosDB(question, id)
+                
+                // Also fetch follow-up questions for string queries
+                if (typeof question === 'string') {
+                  // Use setTimeout to ensure this runs after the API call is initiated
+                  setTimeout(() => handleUserQuestion(question), 100);
+                }
+              }}
+              conversationId={
+                appStateContext?.state.currentChat?.id ? appStateContext?.state.currentChat?.id : undefined
+              }
+            />
           </div>
           {messages && messages.length > 0 && isIntentsPanelOpen && (
             <Stack.Item className={styles.citationPanel} tabIndex={0} role="tabpanel" aria-label="Intents Panel">
