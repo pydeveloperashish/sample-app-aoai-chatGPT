@@ -732,15 +732,15 @@ const Chat = () => {
   const onShowCitation = (citation: Citation) => {
     console.log('==== CITATION CLICK HANDLING START ====');
     console.log('Citation clicked - full citation object:', JSON.stringify(citation, null, 2));
-    
+
     // If URL exists, open it directly
     if (citation.url) {
       console.log(`Citation has URL: ${citation.url}, opening directly`);
       window.open(citation.url, '_blank');
       console.log('==== CITATION CLICK HANDLING END ====');
       return;
-    } 
-    
+    }
+
     // Check if citation might have metadata_storage_path but no filepath
     if (!citation.filepath && citation.metadata) {
       console.log('Citation has no filepath but has metadata:', citation.metadata);
@@ -769,13 +769,13 @@ const Chat = () => {
         console.error("Failed to parse metadata JSON:", e);
       }
     }
-    
+
     if (citation.filepath) {
       console.log(`Working with filepath: ${citation.filepath}`);
       // Extract just the filename from the filepath, regardless of path format
       const filename = citation.filepath.split(/[\/\\]/).pop();
       console.log('Extracted filename:', filename);
-      
+
       if (filename) {
         // Try to decode URI encoded filename if needed
         let decodedFilename = filename;
@@ -787,53 +787,32 @@ const Chat = () => {
         } catch (e) {
           console.error("Error decoding filename:", e);
         }
-        
+
         // Get the base URL from current window location
         const baseUrl = window.location.origin;
         console.log(`Base URL: ${baseUrl}`);
-        
-        // First try to check if the file exists in the data directory
-        console.log(`Checking if file exists in data directory: /data/${decodedFilename}`);
-        fetch(`/data/${decodedFilename}`, { method: 'HEAD' })
+
+        // Only check site_pdfs directory
+        console.log(`Checking if file exists in site_pdfs directory: /site_pdfs/${decodedFilename}`);
+        fetch(`/site_pdfs/${decodedFilename}`, { method: 'HEAD' })
           .then(response => {
-            console.log(`Data directory check result: ${response.status} ${response.ok ? 'OK' : 'Not Found'}`);
+            console.log(`Site_pdfs directory check result: ${response.status} ${response.ok ? 'OK' : 'Not Found'}`);
             if (response.ok) {
-              // File exists in data directory
-              const dataUrl = `${baseUrl}/data/${decodedFilename}`;
+              // File exists in site_pdfs
+              const pdfUrl = `${baseUrl}/site_pdfs/${decodedFilename}`;
               const pageParam = citation.page ? `#page=${citation.page}` : '';
-              const fullUrl = `${dataUrl}${pageParam}`;
-              console.log(`Opening PDF from data directory: ${fullUrl}`);
+              const fullUrl = `${pdfUrl}${pageParam}`;
+              console.log(`Opening PDF from site_pdfs directory: ${fullUrl}`);
               window.open(fullUrl, '_blank');
               console.log('==== CITATION CLICK HANDLING END ====');
             } else {
-              // Try the site_pdfs directory
-              console.log(`Checking if file exists in site_pdfs directory: /site_pdfs/${decodedFilename}`);
-              fetch(`/site_pdfs/${decodedFilename}`, { method: 'HEAD' })
-                .then(response => {
-                  console.log(`Site_pdfs directory check result: ${response.status} ${response.ok ? 'OK' : 'Not Found'}`);
-                  if (response.ok) {
-                    // File exists in site_pdfs
-                    const pdfUrl = `${baseUrl}/site_pdfs/${decodedFilename}`;
-                    const pageParam = citation.page ? `#page=${citation.page}` : '';
-                    const fullUrl = `${pdfUrl}${pageParam}`;
-                    console.log(`Opening PDF from site_pdfs directory: ${fullUrl}`);
-                    window.open(fullUrl, '_blank');
-                    console.log('==== CITATION CLICK HANDLING END ====');
-                  } else {
-                    console.error(`PDF not found in any directory: ${decodedFilename}`);
-                    alert(`Source document not available: ${decodedFilename}. Please check if the file exists in data or site_pdfs directory.`);
-                    console.log('==== CITATION CLICK HANDLING END ====');
-                  }
-                })
-                .catch(error => {
-                  console.error('Error checking site_pdfs directory:', error);
-                  alert('Error accessing the PDF document.');
-                  console.log('==== CITATION CLICK HANDLING END ====');
-                });
+              console.error(`PDF not found in site_pdfs directory: ${decodedFilename}`);
+              alert(`Source document not available: ${decodedFilename}. Please check if the file exists in site_pdfs directory.`);
+              console.log('==== CITATION CLICK HANDLING END ====');
             }
           })
           .catch(error => {
-            console.error('Error checking data directory:', error);
+            console.error('Error checking site_pdfs directory:', error);
             alert('Error accessing the PDF document.');
             console.log('==== CITATION CLICK HANDLING END ====');
           });
@@ -844,62 +823,38 @@ const Chat = () => {
       }
     } else {
       console.error('No URL or filepath in citation:', citation);
-      
+
       // Fallback: Try to use the title as the filename if available
       if (citation.title) {
         console.log('Attempting to use title as filename:', citation.title);
         const sanitizedTitle = citation.title.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase() + '.pdf';
         console.log(`Sanitized title: ${sanitizedTitle}`);
-        
-        // Default to employee handbook as fallback
-        console.log('Using employee_handbook.pdf as fallback');
-        
-        // Try the data directory first
-        console.log('Checking if employee_handbook.pdf exists in data directory');
-        fetch(`/data/employee_handbook.pdf`, { method: 'HEAD' })
+
+        // Only check site_pdfs directory for fallback
+        console.log('Checking if employee_handbook.pdf exists in site_pdfs directory');
+        fetch(`/site_pdfs/employee_handbook.pdf`, { method: 'HEAD' })
           .then(response => {
-            console.log(`Data directory check result: ${response.status} ${response.ok ? 'OK' : 'Not Found'}`);
+            console.log(`Site_pdfs directory check result: ${response.status} ${response.ok ? 'OK' : 'Not Found'}`);
             if (response.ok) {
-              const dataUrl = `${window.location.origin}/data/employee_handbook.pdf`;
+              const pdfUrl = `${window.location.origin}/site_pdfs/employee_handbook.pdf`;
               const pageParam = citation.page ? `#page=${citation.page}` : '';
-              const fullUrl = `${dataUrl}${pageParam}`;
-              console.log(`Opening handbook PDF from data directory: ${fullUrl}`);
+              const fullUrl = `${pdfUrl}${pageParam}`;
+              console.log(`Opening handbook PDF from site_pdfs directory: ${fullUrl}`);
               window.open(fullUrl, '_blank');
               console.log('==== CITATION CLICK HANDLING END ====');
             } else {
-              // Try site_pdfs directory next
-              console.log('Checking if employee_handbook.pdf exists in site_pdfs directory');
-              fetch(`/site_pdfs/employee_handbook.pdf`, { method: 'HEAD' })
-                .then(response => {
-                  console.log(`Site_pdfs directory check result: ${response.status} ${response.ok ? 'OK' : 'Not Found'}`);
-                  if (response.ok) {
-                    const pdfUrl = `${window.location.origin}/site_pdfs/employee_handbook.pdf`;
-                    const pageParam = citation.page ? `#page=${citation.page}` : '';
-                    const fullUrl = `${pdfUrl}${pageParam}`;
-                    console.log(`Opening handbook PDF from site_pdfs directory: ${fullUrl}`);
-                    window.open(fullUrl, '_blank');
-                    console.log('==== CITATION CLICK HANDLING END ====');
-                  } else {
-                    // If still not found, show the error
-                    console.error('Fallback PDF not found in any directory');
-                    alert('Source document not available for this citation. No URL or filepath provided.');
-                    console.log('==== CITATION CLICK HANDLING END ====');
-                  }
-                })
-                .catch(error => {
-                  console.error('Error checking site_pdfs directory for handbook:', error);
-                  alert('Error accessing the PDF document.');
-                  console.log('==== CITATION CLICK HANDLING END ====');
-                });
+              // If still not found, show the error
+              console.error('Fallback PDF not found in site_pdfs directory');
+              alert('Source document not available for this citation. No URL or filepath provided.');
+              console.log('==== CITATION CLICK HANDLING END ====');
             }
           })
           .catch(error => {
-            console.error('Error checking data directory for handbook:', error);
+            console.error('Error checking site_pdfs directory for handbook:', error);
             alert('Error accessing the PDF document.');
             console.log('==== CITATION CLICK HANDLING END ====');
           });
       } else {
-        console.error('No URL, filepath, or title in citation');
         alert('Source document not available for this citation. No URL or filepath provided.');
         console.log('==== CITATION CLICK HANDLING END ====');
       }

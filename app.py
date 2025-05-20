@@ -202,75 +202,6 @@ async def assets(path):
     return await send_from_directory("static/assets", path)
 
 
-@bp.route("/data/<path:path>")
-async def serve_data_files(path):
-    """Serve files from the data directory, primarily for PDF viewing."""
-    import os
-    
-    logging.info(f"==== SERVE DATA FILES START: {path} ====")
-    logging.info(f"Attempting to serve file: {path} from data directory")
-    
-    # Check if the file exists
-    file_path = os.path.join("data", path)
-    logging.info(f"Full file path: {file_path}")
-    
-    if not os.path.exists(file_path):
-        logging.error(f"File not found: {file_path}")
-        # Try to serve from a different directory as a fallback
-        fallback_locations = ["site_pdfs", "static/pdfs", "pdfs"]
-        logging.info(f"Trying fallback locations: {fallback_locations}")
-        
-        for location in fallback_locations:
-            alt_path = os.path.join(location, path)
-            logging.info(f"Checking alternative location: {alt_path}")
-            
-            if os.path.exists(alt_path):
-                logging.info(f"File found in alternative location: {alt_path}")
-                # If file found at alternative location, make a copy to data dir
-                os.makedirs("data", exist_ok=True)
-                import shutil
-                try:
-                    shutil.copy2(alt_path, file_path)
-                    logging.info(f"File copied from {alt_path} to {file_path}")
-                    break
-                except Exception as e:
-                    logging.error(f"Error copying file: {e}")
-        
-        # If file still doesn't exist after fallback attempts
-        if not os.path.exists(file_path):
-            logging.error(f"File not found in any location: {path}")
-            logging.info(f"==== SERVE DATA FILES END: {path} - NOT FOUND ====")
-            return jsonify({"error": f"File not found: {path}"}), 404
-    
-    # Get file size
-    file_size = os.path.getsize(file_path)
-    logging.info(f"File size: {file_size} bytes")
-    
-    try:
-        if path.lower().endswith('.pdf'):
-            logging.info(f"Serving PDF file: {path}")
-            response = await send_from_directory("data", path)
-            response.headers['Content-Type'] = 'application/pdf'
-            response.headers['Content-Disposition'] = f'inline; filename="{path}"'
-            response.headers['Content-Length'] = str(file_size)
-            # Add cache headers to improve performance
-            response.headers['Cache-Control'] = 'public, max-age=86400'
-            logging.info(f"PDF response headers: {dict(response.headers)}")
-            logging.info(f"==== SERVE DATA FILES END: {path} - SUCCESS ====")
-            return response
-        else:
-            # For non-PDF files
-            logging.info(f"Serving non-PDF file: {path}")
-            response = await send_from_directory("data", path)
-            logging.info(f"Non-PDF response headers: {dict(response.headers)}")
-            logging.info(f"==== SERVE DATA FILES END: {path} - SUCCESS ====")
-            return response
-    except Exception as e:
-        logging.exception(f"Error serving file: {path}")
-        logging.info(f"==== SERVE DATA FILES END: {path} - ERROR ====")
-        return jsonify({"error": f"Error serving file: {str(e)}"}), 500
-
-
 @bp.route("/site_pdfs/<path:path>")
 async def serve_site_pdfs(path):
     """Serve files from the site_pdfs directory, primarily for PDF viewing."""
@@ -2280,87 +2211,10 @@ async def get_answer_by_id(message_id):
         return jsonify({"error": str(e)}), 500
 
 
-@bp.route("/debug/data-files", methods=["GET"])
-async def list_data_files():
-    """Debug endpoint to list all files in the data directory."""
-    import os
-    
-    try:
-        data_dir = "data"
-        # Get all files in the data directory, recursively
-        files = []
-        for root, dirs, filenames in os.walk(data_dir):
-            for filename in filenames:
-                file_path = os.path.join(root, filename)
-                rel_path = os.path.relpath(file_path, data_dir)
-                files.append({
-                    "filename": filename,
-                    "path": rel_path,
-                    "full_path": file_path,
-                    "size": os.path.getsize(file_path),
-                    "type": os.path.splitext(filename)[1].lower(),
-                })
-        
-        return jsonify({
-            "data_dir": os.path.abspath(data_dir),
-            "file_count": len(files),
-            "files": files
-        }), 200
-    except Exception as e:
-        logging.exception("Error listing data files")
-        return jsonify({"error": str(e)}), 500
-
-
-@bp.route("/debug/check-file", methods=["GET"])
-async def check_file_exists():
-    """Debug endpoint to check if a specific file exists."""
-    import os
-    
-    file_path = request.args.get("path", "")
-    if not file_path:
-        return jsonify({"error": "No file path provided. Use ?path=filename.pdf"}), 400
-    
-    # Make sure we don't allow path traversal
-    if ".." in file_path:
-        return jsonify({"error": "Invalid file path"}), 400
-    
-    # Check if path is absolute or relative
-    if os.path.isabs(file_path):
-        full_path = file_path
-    else:
-        # Prepend data directory if relative path
-        if not file_path.startswith("data/"):
-            full_path = os.path.join("data", file_path)
-        else:
-            full_path = file_path
-    
-    try:
-        exists = os.path.exists(full_path)
-        
-        result = {
-            "file_path": file_path,
-            "full_path": full_path,
-            "exists": exists
-        }
-        
-        if exists:
-            result.update({
-                "size": os.path.getsize(full_path),
-                "is_file": os.path.isfile(full_path),
-                "is_dir": os.path.isdir(full_path),
-                "type": os.path.splitext(full_path)[1].lower() if os.path.isfile(full_path) else None
-            })
-        
-        return jsonify(result), 200
-    except Exception as e:
-        logging.exception(f"Error checking file: {file_path}")
-        return jsonify({"error": str(e)}), 500
-
-
 @bp.route("/debug/pdf-info", methods=["GET"])
 async def debug_pdf_info():
     """
-    Debug endpoint to list all PDF files in data and site_pdfs directories.
+    Debug endpoint to list all PDF files in site_pdfs directory only.
     Returns detailed information about each PDF file for debugging.
     """
     import os
@@ -2372,50 +2226,8 @@ async def debug_pdf_info():
     try:
         result = {
             "timestamp": time.time(),
-            "data_directory": {},
             "site_pdfs_directory": {}
         }
-        
-        # Check data directory
-        data_dir = "data"
-        if os.path.exists(data_dir) and os.path.isdir(data_dir):
-            logging.info(f"Checking {data_dir} directory for PDFs")
-            data_files = []
-            
-            for filename in os.listdir(data_dir):
-                if filename.lower().endswith('.pdf'):
-                    file_path = os.path.join(data_dir, filename)
-                    file_size = os.path.getsize(file_path)
-                    file_mtime = os.path.getmtime(file_path)
-                    
-                    # Calculate file hash for first 1024 bytes (for quick fingerprinting)
-                    file_hash = ""
-                    try:
-                        with open(file_path, 'rb') as f:
-                            file_hash = hashlib.md5(f.read(1024)).hexdigest()
-                    except Exception as e:
-                        file_hash = f"Error: {str(e)}"
-                    
-                    data_files.append({
-                        "filename": filename,
-                        "path": file_path,
-                        "size_bytes": file_size,
-                        "modified_time": file_mtime,
-                        "modified_time_str": time.ctime(file_mtime),
-                        "hash_first_1k": file_hash
-                    })
-            
-            result["data_directory"] = {
-                "exists": True,
-                "path": os.path.abspath(data_dir),
-                "file_count": len(data_files),
-                "files": data_files
-            }
-        else:
-            result["data_directory"] = {
-                "exists": False,
-                "path": os.path.abspath(data_dir) if os.path.exists(data_dir) else "Not found"
-            }
         
         # Check site_pdfs directory
         site_pdfs_dir = "site_pdfs"
@@ -2458,18 +2270,7 @@ async def debug_pdf_info():
                 "path": os.path.abspath(site_pdfs_dir) if os.path.exists(site_pdfs_dir) else "Not found"
             }
         
-        # Check if the directories were created
-        if not result["data_directory"].get("exists"):
-            logging.info("Creating data directory as it doesn't exist")
-            os.makedirs(data_dir, exist_ok=True)
-            result["data_directory"]["created_now"] = True
-            
-        if not result["site_pdfs_directory"].get("exists"):
-            logging.info("Creating site_pdfs directory as it doesn't exist")
-            os.makedirs(site_pdfs_dir, exist_ok=True)
-            result["site_pdfs_directory"]["created_now"] = True
-            
-        logging.info(f"PDF info debug completed. Found {result['data_directory'].get('file_count', 0)} PDFs in data dir and {result['site_pdfs_directory'].get('file_count', 0)} PDFs in site_pdfs dir")
+        logging.info(f"PDF info debug completed. Found {result['site_pdfs_directory'].get('file_count', 0)} PDFs in site_pdfs dir")
         return jsonify(result), 200
         
     except Exception as e:

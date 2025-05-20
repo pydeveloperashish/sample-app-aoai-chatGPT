@@ -396,13 +396,13 @@ def create_index(config, credential, form_recognizer_client=None, embedding_mode
         raise Exception(f"Failed to create or update index {index_name}")
     
     data_configs = []
-    if "data_path" in config:
+    if "site_pdfs" in config:
         data_configs.append({
-            "path": config["data_path"],
+            "path": config["site_pdfs"],
             "url_prefix": config.get("url_prefix", None),
         })
-    if "data_paths" in config:
-        data_configs.extend(config["data_paths"])
+    if "site_pdfs_paths" in config:
+        data_configs.extend(config["site_pdfs_paths"])
 
     for data_config in data_configs:
         # chunk directory

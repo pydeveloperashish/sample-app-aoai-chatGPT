@@ -1,6 +1,6 @@
 [
     {
-        "data_path": "<path to data>",
+        "data_path": "site_pdfs",
         "location": "<azure region, e.g. 'westus2'>",
         "subscription_id": "<subscription id>",
         "resource_group": "<resource group name>",
