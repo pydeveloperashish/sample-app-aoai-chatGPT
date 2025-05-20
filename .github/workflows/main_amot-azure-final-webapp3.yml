@@ -69,6 +69,24 @@ jobs:
           # Remove .env file to ensure we don't include sensitive data
           rm -f .env
 
+      - name: Ensure PDF directories exist
+        run: |
+          # Create data and site_pdfs directories if they don't exist
+          mkdir -p data site_pdfs
+          
+          # If data/employee_handbook.pdf exists, copy it to site_pdfs as well
+          if [ -f "data/employee_handbook.pdf" ]; then
+            cp data/employee_handbook.pdf site_pdfs/
+            echo "Copied employee_handbook.pdf to site_pdfs/"
+          fi
+          
+          # List contents to verify
+          echo "Contents of data directory:"
+          ls -la data/
+          
+          echo "Contents of site_pdfs directory:"
+          ls -la site_pdfs/
+
       - name: Create startup script
         run: |
           cat > startup.sh << 'EOF'
@@ -100,7 +118,7 @@ jobs:
       - name: Zip artifact for deployment
         run: |
           # Create more reliable exclusions pattern for zip
-          find . -type d -name "venv" -o -name "node_modules" -o -name ".git" -o -name ".github" -o -name ".pytest_cache" -o -name "__pycache__" -prune -o -type f -name "*.py" -o -name "*.html" -o -name "*.css" -o -name "*.js" -o -name "*.json" -o -name "*.md" -o -name "*.txt" -o -name "*.ini" -o -name "*.yml" -o -name "*.yaml" -o -name "*.cfg" -o -path "./static/*" -o -path "./templates/*" -o -name "startup.sh" | zip -@ release.zip
+          find . -type d -name "venv" -o -name "node_modules" -o -name ".git" -o -name ".github" -o -name ".pytest_cache" -o -name "__pycache__" -prune -o -type f -name "*.py" -o -name "*.html" -o -name "*.css" -o -name "*.js" -o -name "*.json" -o -name "*.md" -o -name "*.txt" -o -name "*.ini" -o -name "*.yml" -o -name "*.yaml" -o -name "*.cfg" -o -name "*.pdf" -o -path "./static/*" -o -path "./templates/*" -o -path "./data/*" -o -path "./site_pdfs/*" -o -name "startup.sh" | zip -@ release.zip
 
       - name: Upload artifact for deployment jobs
         uses: actions/upload-artifact@v4
