@@ -150,6 +150,11 @@ async def assets(path):
 @bp.route("/data/<path:path>")
 async def serve_data_files(path):
     """Serve files from the data directory, primarily for PDF viewing."""
+    if path.lower().endswith('.pdf'):
+        response = await send_from_directory("data", path)
+        response.headers['Content-Type'] = 'application/pdf'
+        response.headers['Content-Disposition'] = f'inline; filename="{path}"'
+        return response
     return await send_from_directory("data", path)
 
 

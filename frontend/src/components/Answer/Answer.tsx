@@ -288,7 +288,6 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked, follow
       const citationText = props.children[0]
       // Find the citation object with this reindex_id
       const citation = parsedAnswer?.citations.find(c => c.reindex_id === citationText)
-      const isActive = citation && citation.id === activeCitationId
       
       // When clicked, this will now open the source document directly
       const handleCitationClick = () => {
@@ -303,10 +302,10 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked, follow
         <sup
           className={styles.clickableSup}
           onClick={handleCitationClick}
-          title="Click to view source document"
+          title="Click to open PDF source document"
           role="button"
           tabIndex={0}
-          aria-label={`Citation ${citationText}`}
+          aria-label={`Open PDF source for citation ${citationText}`}
           onKeyDown={e => {
             if (e.key === 'Enter' || e.key === ' ') {
               handleCitationClick()
@@ -437,7 +436,7 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked, follow
                 <div
                   className={styles.citationContainer}
                   onClick={() => onCitationClicked(citation)}
-                  aria-label={`Citation ${idx}: ${citationFilename}`}
+                  aria-label={`Open PDF: ${citationFilename}`}
                   role="button"
                   tabIndex={0}
                   onKeyDown={e => {
@@ -448,7 +447,7 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked, follow
                   <div className={styles.citation}>
                     <FontIcon iconName="DocumentPDF" className={styles.citationIcon} />
                     <span>{citationFilename}</span>
-                    <span className={styles.viewSourceText}>View Source</span>
+                    <span className={styles.viewSourceText}>Open PDF</span>
                   </div>
                 </div>
               )

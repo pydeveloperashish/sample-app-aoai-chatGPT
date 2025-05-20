@@ -735,13 +735,21 @@ const Chat = () => {
       // If URL exists, open it directly
       window.open(citation.url, '_blank');
     } else if (citation.filepath) {
-      // Construct a URL to the data file
-      const filename = citation.filepath.split('/').pop(); // Get just the filename
+      // Extract just the filename from the filepath, regardless of path format
+      const filename = citation.filepath.split(/[\/\\]/).pop();
+      
       if (filename) {
-        const dataUrl = `/data/${filename}`;
+        // Get the base URL from current window location
+        const baseUrl = window.location.origin;
+        
+        // Construct the full URL to the data file
+        const dataUrl = `${baseUrl}/data/${filename}`;
         
         // If page number is available, add it as a fragment to open at specific page
         const pageParam = citation.page ? `#page=${citation.page}` : '';
+        
+        // Open the PDF in a new tab with the page parameter
+        console.log(`Opening PDF: ${dataUrl}${pageParam}`);
         window.open(`${dataUrl}${pageParam}`, '_blank');
       } else {
         console.error('Could not extract filename from filepath:', citation.filepath);
