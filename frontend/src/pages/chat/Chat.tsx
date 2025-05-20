@@ -807,7 +807,7 @@ const Chat = () => {
               console.log('==== CITATION CLICK HANDLING END ====');
             } else {
               console.error(`PDF not found in site_pdfs directory: ${decodedFilename}`);
-              alert(`Source document not available: ${decodedFilename}. Please check if the file exists in site_pdfs directory.`);
+              alert(`Source document '${decodedFilename}' not available. Please check if the file exists in the site_pdfs directory.`);
               console.log('==== CITATION CLICK HANDLING END ====');
             }
           })
@@ -822,7 +822,7 @@ const Chat = () => {
         console.log('==== CITATION CLICK HANDLING END ====');
       }
     } else {
-      console.error('No URL or filepath in citation:', citation);
+      console.error('No URL or direct filepath in citation:', citation);
 
       // Fallback: Try to use the title as the filename if available
       if (citation.title) {
@@ -830,32 +830,31 @@ const Chat = () => {
         const sanitizedTitle = citation.title.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase() + '.pdf';
         console.log(`Sanitized title: ${sanitizedTitle}`);
 
-        // Only check site_pdfs directory for fallback
-        console.log('Checking if employee_handbook.pdf exists in site_pdfs directory');
-        fetch(`/site_pdfs/employee_handbook.pdf`, { method: 'HEAD' })
+        const baseUrl = window.location.origin;
+        console.log(`Checking if title-based file exists in site_pdfs directory: /site_pdfs/${sanitizedTitle}`);
+        fetch(`/site_pdfs/${sanitizedTitle}`, { method: 'HEAD' })
           .then(response => {
-            console.log(`Site_pdfs directory check result: ${response.status} ${response.ok ? 'OK' : 'Not Found'}`);
+            console.log(`Title-based file check result: ${response.status} ${response.ok ? 'OK' : 'Not Found'}`);
             if (response.ok) {
-              const pdfUrl = `${window.location.origin}/site_pdfs/employee_handbook.pdf`;
+              const pdfUrl = `${baseUrl}/site_pdfs/${sanitizedTitle}`;
               const pageParam = citation.page ? `#page=${citation.page}` : '';
               const fullUrl = `${pdfUrl}${pageParam}`;
-              console.log(`Opening handbook PDF from site_pdfs directory: ${fullUrl}`);
+              console.log(`Opening PDF from site_pdfs directory (using title): ${fullUrl}`);
               window.open(fullUrl, '_blank');
               console.log('==== CITATION CLICK HANDLING END ====');
             } else {
-              // If still not found, show the error
-              console.error('Fallback PDF not found in site_pdfs directory');
-              alert('Source document not available for this citation. No URL or filepath provided.');
+              console.error(`Title-based PDF not found in site_pdfs directory: ${sanitizedTitle}`);
+              alert(`Source document '${sanitizedTitle}' (derived from title) not available. Please check if the file exists in the site_pdfs directory.`);
               console.log('==== CITATION CLICK HANDLING END ====');
             }
           })
           .catch(error => {
-            console.error('Error checking site_pdfs directory for handbook:', error);
-            alert('Error accessing the PDF document.');
+            console.error('Error checking site_pdfs directory for title-based fallback:', error);
+            alert('Error accessing the PDF document using title-based fallback.');
             console.log('==== CITATION CLICK HANDLING END ====');
           });
       } else {
-        alert('Source document not available for this citation. No URL or filepath provided.');
+        alert('Source document not available for this citation. No URL, filepath, or title provided to locate the document.');
         console.log('==== CITATION CLICK HANDLING END ====');
       }
     }
