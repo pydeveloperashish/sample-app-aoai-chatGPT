@@ -184,8 +184,7 @@ export function parseAnswer(answer: AskResponse): ParsedAnswer {
       
       // Ensure citation has a filepath - if not, use a default value
       if (!citation.filepath && !citation.url) {
-        console.log('Citation missing filepath and URL. Setting default filepath to employee_handbook.pdf');
-        citation.filepath = 'employee_handbook.pdf';
+        console.log('Citation missing filepath and URL. Defaulting behavior has been removed.');
       }
       
       // Make sure filepath is properly formatted
